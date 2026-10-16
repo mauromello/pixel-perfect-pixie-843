@@ -2,6 +2,16 @@
 // "#" stands for any number inside the text (see traduzir in i18n.ts).
 export const EN_TELAS: Record<string, string> = {
   // Common
+  "Analytics e Modelos ML": "Analytics & ML Models", "Data Lake e Infraestrutura": "Data Lake & Infrastructure", "Logs em Tempo Real": "Real-Time Logs",
+  "Score mínimo": "Minimum score", "Todas": "All", "Assertividade do modelo": "Model accuracy", "Energia recuperável": "Recoverable energy",
+  "Alvos priorizados": "Prioritized targets", "Anomalias de carga (24 h)": "Load anomalies (24 h)", "Matriz de Scoring de Fraude e PNT": "Fraud & NTL Scoring Matrix",
+  "Score": "Score", "Tipologia": "Typology", "Ação recomendada": "Recommended action", "PNT (MWh)": "NTL (MWh)", "Recuperável (MWh)": "Recoverable (MWh)",
+  "Curva de Carga Prevista vs. Real e Bandas de Anomalia": "Forecast vs. Actual Load Curve & Anomaly Bands", "Prevista": "Forecast", "Real": "Actual", "Anomalia": "Anomaly",
+  "Eficácia de Campo por Subestação": "Field Effectiveness by Substation", "Inspeções": "Inspections", "Confirmadas": "Confirmed", "MWh recuperado": "MWh recovered",
+  "Precisão e Recall por Limiar de Score": "Precision & Recall by Score Threshold", "Precisão": "Precision",
+  "By-pass / desvio": "Bypass / diversion", "Ligação clandestina": "Illegal connection", "Medidor travado": "Stuck meter", "Inadimplência recorrente": "Recurring default",
+  "Inspeção em campo": "Field inspection", "Blindagem de rede (BTzero)": "Network shielding (BTzero)", "Troca por medição AMI": "AMI meter replacement", "Ação comercial": "Commercial action",
+  "Nenhum alvo acima do score mínimo": "No targets above minimum score",
   "Adicionar": "Add", "Alimentador": "Feeder", "Alimentadores": "Feeders", "Subestação": "Substation", "Subestações": "Substations",
   "Transformador": "Transformer", "Transformadores": "Transformers", "Trafo": "Transformer", "Trafos": "Transformers",
   "Trecho": "Segment", "Trechos": "Segments", "Cliente": "Customer", "Clientes": "Customers", "Chave": "Switch", "Chaves": "Switches",
