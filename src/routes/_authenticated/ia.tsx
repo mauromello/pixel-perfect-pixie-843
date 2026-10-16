@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { PageHeader } from "@/components/AppShell";
 import { fontesDados } from "@/lib/mock-data";
+import { AnalyticsIA } from "@/components/AnalyticsIA";
 
 export const Route = createFileRoute("/_authenticated/ia")({
   head: () => ({
@@ -31,6 +32,7 @@ const eventos = [
 const spark = (s: number) => Array.from({ length: 20 }, (_, i) => ({ v: 50 + Math.sin(i / 2 + s) * 20 + ((i * s) % 10) }));
 
 function IaPage() {
+  const [aba, setAba] = useState<"analytics" | "lake" | "logs">("analytics");
   const [logs, setLogs] = useState<{ t: string; e: string[] }[]>([]);
   useEffect(() => {
     const add = () => setLogs((l) => [{ t: new Date().toLocaleTimeString("pt-BR"), e: eventos[Math.floor(Math.random() * eventos.length)]! }, ...l].slice(0, 30));
@@ -49,7 +51,14 @@ function IaPage() {
   return (
     <div>
       <PageHeader title="Saúde dos Dados e Algoritmos" subtitle="Módulo de IA, ML e Data Lake — status de integração" />
-      <div className="space-y-4 p-6">
+      <div className="flex gap-1 border-b px-6 pt-3">
+        {([["analytics", "Analytics e Modelos ML"], ["lake", "Data Lake e Infraestrutura"], ["logs", "Logs em Tempo Real"]] as const).map(([id, l]) => (
+          <button key={id} onClick={() => setAba(id)} className={`rounded-t px-4 py-2 text-sm ${aba === id ? "border border-b-0 bg-card font-semibold" : "text-muted-foreground hover:text-foreground"}`}>{l}</button>
+        ))}
+      </div>
+      {aba === "analytics" && <div className="p-6"><AnalyticsIA /></div>}
+      <div className={`space-y-4 p-6 ${aba === "analytics" ? "hidden" : ""}`}>
+        <div className={aba === "lake" ? "space-y-4" : "hidden"}>
         <h2 className="text-sm font-semibold text-muted-foreground">Escalabilidade e Performance do Repositório Único</h2>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {cards.map(([l, v, s, k]) => (
@@ -63,7 +72,6 @@ function IaPage() {
             </div>
           ))}
         </div>
-        <div className="grid gap-4 xl:grid-cols-[1fr_440px]">
           <div className="panel overflow-auto">
             <div className="panel-h">Saúde da Fonte Única de Dados</div>
             <table className="tbl">
@@ -76,7 +84,9 @@ function IaPage() {
               ))}</tbody>
             </table>
           </div>
-          <div className="panel flex max-h-[460px] flex-col">
+        </div>
+        <div className={aba === "logs" ? "" : "hidden"}>
+          <div className="panel flex max-h-[600px] flex-col">
             <div className="panel-h">Logs do Motor de IA <span className="badge bg-success/15 text-success">ao vivo</span></div>
             <div className="flex-1 overflow-auto bg-sidebar p-3 font-mono text-xs text-sidebar-foreground">
               {logs.map((l, i) => (
