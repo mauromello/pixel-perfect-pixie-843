@@ -11,6 +11,8 @@ const CORES = ["oklch(0.55 0.17 250)", "oklch(0.62 0.18 40)", "oklch(0.55 0.15 1
 
 /** Identifica a camada BDGD pelo nome do arquivo/coleção ou pelos atributos. */
 export function detectarCamada(nome: string, props: Record<string, unknown>): Camada | null {
+  const cam = String(props.CAMADA ?? props.camada ?? "").toUpperCase();
+  if ((CAMADAS as string[]).includes(cam)) return cam as Camada;
   const n = nome.toUpperCase();
   for (const c of CAMADAS) if (new RegExp(`(^|[^A-Z])${c}([^A-Z]|$)`).test(n)) return c;
   const k = new Set(Object.keys(props).map((x) => x.toUpperCase()));
@@ -58,7 +60,7 @@ export type ResultadoImportacao = { subestacoes: Subestacao[]; chaves: Chave[]; 
 export function importarBDGD(arquivos: { nome: string; dados: FeatureCollection }[], opts: { tensaoPadraoKV?: number } = {}): ResultadoImportacao {
   const tPad = opts.tensaoPadraoKV ?? 13.8;
   const avisos: string[] = [];
-  const L: Record<Camada, Record<string, unknown>[] & { geo?: never }> = { SUB: [], CTMT: [], SSDMT: [], UNSEMT: [], UNTRMT: [], UCBT: [], UCMT: [], UGBT: [], UGMT: [] };
+  const L: Record<Camada, Record<string, unknown>[]> = { SUB: [], CTMT: [], SSDMT: [], UNSEMT: [], UNTRMT: [], UCBT: [], UCMT: [], UGBT: [], UGMT: [] };
   const geo = new Map<Record<string, unknown>, Coord[]>();
   for (const a of arquivos) {
     for (const f of a.dados.features ?? []) {
