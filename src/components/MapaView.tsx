@@ -41,7 +41,7 @@ export default function MapaView() {
   const buscar = () => {
     setErro("");
     if (tipo === "Coordenadas") {
-      const [a, b] = q.split(",").map((s) => Number(s.trim()));
+      const [a = NaN, b = NaN] = q.split(",").map((s) => Number(s.trim()));
       if (isNaN(a) || isNaN(b)) return setErro("Use o formato: -22.90, -47.06");
       return setAlvo([a, b]);
     }
