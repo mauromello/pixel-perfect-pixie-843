@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PageHeader } from "@/components/AppShell";
 import { Manobras } from "@/components/Manobras";
+import { PainelBalancoFisico } from "@/components/BalancoFisico";
 import { arvore, balanco, criticas, fontesBalanco, type Node } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
@@ -117,6 +118,8 @@ function BalancoPage() {
               </div>
             </div>
           </div>
+
+          <PainelBalancoFisico />
 
           <Manobras />
 
