@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedGuiaRouteImport } from './routes/_authenticated/guia'
 import { Route as AuthenticatedIaRouteImport } from './routes/_authenticated/ia'
 import { Route as AuthenticatedManobrasRouteImport } from './routes/_authenticated/manobras'
 import { Route as AuthenticatedMapasRouteImport } from './routes/_authenticated/mapas'
@@ -37,6 +38,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGuiaRoute = AuthenticatedGuiaRouteImport.update({
+  id: '/guia',
+  path: '/guia',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedIaRoute = AuthenticatedIaRouteImport.update({
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/guia': typeof AuthenticatedGuiaRoute
   '/ia': typeof AuthenticatedIaRoute
   '/manobras': typeof AuthenticatedManobrasRoute
   '/mapas': typeof AuthenticatedMapasRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/guia': typeof AuthenticatedGuiaRoute
   '/ia': typeof AuthenticatedIaRoute
   '/manobras': typeof AuthenticatedManobrasRoute
   '/mapas': typeof AuthenticatedMapasRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/guia': typeof AuthenticatedGuiaRoute
   '/_authenticated/ia': typeof AuthenticatedIaRoute
   '/_authenticated/manobras': typeof AuthenticatedManobrasRoute
   '/_authenticated/mapas': typeof AuthenticatedMapasRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin'
+    | '/guia'
     | '/ia'
     | '/manobras'
     | '/mapas'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/admin'
+    | '/guia'
     | '/ia'
     | '/manobras'
     | '/mapas'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/_authenticated/admin'
+    | '/_authenticated/guia'
     | '/_authenticated/ia'
     | '/_authenticated/manobras'
     | '/_authenticated/mapas'
@@ -176,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/guia': {
+      id: '/_authenticated/guia'
+      path: '/guia'
+      fullPath: '/guia'
+      preLoaderRoute: typeof AuthenticatedGuiaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ia': {
@@ -225,6 +244,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedGuiaRoute: typeof AuthenticatedGuiaRoute
   AuthenticatedIaRoute: typeof AuthenticatedIaRoute
   AuthenticatedManobrasRoute: typeof AuthenticatedManobrasRoute
   AuthenticatedMapasRoute: typeof AuthenticatedMapasRoute
@@ -236,6 +256,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedGuiaRoute: AuthenticatedGuiaRoute,
   AuthenticatedIaRoute: AuthenticatedIaRoute,
   AuthenticatedManobrasRoute: AuthenticatedManobrasRoute,
   AuthenticatedMapasRoute: AuthenticatedMapasRoute,
