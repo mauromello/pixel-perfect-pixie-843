@@ -18,3 +18,4 @@
 - Loss projection and multivariate sensitivity (Anexo II items 19/31) live in `src/lib/sensibilidade.ts` (pure, tested); the projection screen only renders it.
 - UI translation uses `src/lib/i18n.ts` (`useT()`), keyed by the Portuguese text with fallback to Portuguese, so untranslated screens keep working while coverage grows.
 - Login requirement is a global flag in the `configuracao` table (anon-readable, admin-only update) read by the `_authenticated` gate via `src/lib/configAcesso.ts`; when off, visitors get a full-access evaluator session so evaluators need no account.
+- AI analytics scoring, precision/recall and anomaly detection live in `src/lib/analytics.ts` (pure, tested), derived from `tematicos` indicators so analytics stays tied to the network model.
