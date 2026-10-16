@@ -97,7 +97,7 @@ const CHAVE = "perdazero_idioma";
 function inicial(): Idioma {
   if (typeof window === "undefined") return "pt-BR";
   const v = window.localStorage.getItem(CHAVE);
-  return v === "en-US" ? "en-US" : "pt-BR";
+  return v === "pt-BR" ? "pt-BR" : "en-US";
 }
 export const useIdioma = create<S>()((set) => ({
   idioma: inicial(),
