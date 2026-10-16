@@ -4,13 +4,16 @@ import { Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 
-type Busca = { redirect?: string; bloqueado?: number };
+type Busca = { redirect?: string | undefined; bloqueado?: number | undefined };
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (s: Record<string, unknown>): Busca => ({
-    redirect: typeof s.redirect === "string" && s.redirect.startsWith("/") && !s.redirect.startsWith("//") ? s.redirect : undefined,
-    bloqueado: s.bloqueado ? 1 : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): Busca => {
+    const r = s["redirect"];
+    return {
+      redirect: typeof r === "string" && r.startsWith("/") && !r.startsWith("//") ? r : undefined,
+      bloqueado: s["bloqueado"] ? 1 : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Entrar — PerdaZero" },
