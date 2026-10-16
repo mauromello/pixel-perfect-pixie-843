@@ -31,7 +31,7 @@ const spark = (s: number) => Array.from({ length: 20 }, (_, i) => ({ v: 50 + Mat
 function IaPage() {
   const [logs, setLogs] = useState<{ t: string; e: string[] }[]>([]);
   useEffect(() => {
-    const add = () => setLogs((l) => [{ t: new Date().toLocaleTimeString("pt-BR"), e: eventos[Math.floor(Math.random() * eventos.length)] }, ...l].slice(0, 30));
+    const add = () => setLogs((l) => [{ t: new Date().toLocaleTimeString("pt-BR"), e: eventos[Math.floor(Math.random() * eventos.length)]! }, ...l].slice(0, 30));
     add(); add(); add();
     const id = setInterval(add, 2500);
     return () => clearInterval(id);

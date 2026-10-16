@@ -2,7 +2,7 @@ export type Node = {
   id: string;
   nome: string;
   tipo: "Distribuidora" | "Regional" | "Município" | "SE" | "Alimentador" | "Religador" | "Trafo" | "Medidor" | "Instalação";
-  filhos?: Node[];
+  filhos?: Node[] | undefined;
 };
 
 const tipos: Node["tipo"][] = ["Regional", "Município", "SE", "Alimentador", "Religador", "Trafo", "Medidor", "Instalação"];
@@ -20,7 +20,7 @@ const nomes: Record<string, string[]> = {
 function build(level: number, prefix: string): Node[] {
   const t = tipos[level] as string;
   const qtd = level >= 5 ? 1 : 2;
-  return nomes[t].slice(0, qtd).map((n: string, i: number) => {
+  return nomes[t]!.slice(0, qtd).map((n: string, i: number) => {
     const id = `${prefix}-${i}`;
     return { id, nome: level <= 1 ? n : `${n}${prefix.length > 6 ? "" : ""}`, tipo: t as Node["tipo"], filhos: level < tipos.length - 1 ? build(level + 1, id) : undefined };
   });

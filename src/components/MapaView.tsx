@@ -62,7 +62,7 @@ export default function MapaView() {
             </Circle>
           )),
         )}
-        {ativas.rede && (
+        {ativas["rede"] && (
           <>
             <Polyline positions={[[-22.875, -47.05], [-22.89, -47.04], [-22.9, -47.07], [-22.915, -47.055]]} pathOptions={{ color: "oklch(0.55 0.14 155)", weight: 3 }} />
             <Polyline positions={[[-22.83, -47.08], [-22.86, -47.1], [-22.88, -47.09]]} pathOptions={{ color: "oklch(0.55 0.14 155)", weight: 3 }} />
