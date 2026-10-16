@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { EN_TELAS } from "./i18n-en";
 
 export type Idioma = "pt-BR" | "en-US";
 export const IDIOMAS: { id: Idioma; rotulo: string }[] = [
@@ -52,10 +53,38 @@ const EN: Record<string, string> = {
   "E-mail": "Email",
 };
 
-const DIC: Record<Idioma, Record<string, string>> = { "pt-BR": {}, "en-US": EN };
+const DIC: Record<Idioma, Record<string, string>> = { "pt-BR": {}, "en-US": { ...EN_TELAS, ...EN } };
+
+const NUM = /-?\d+(?:[.,]\d+)*/g;
+function exato(d: Record<string, string>, s: string): string | undefined {
+  if (d[s] !== undefined) return d[s];
+  // Numbers inside the text: look up the "#" template and put the numbers back.
+  const nums = s.match(NUM);
+  if (!nums) return undefined;
+  const tpl = d[s.replace(NUM, "#")];
+  if (tpl === undefined) return undefined;
+  let i = 0;
+  return tpl.replace(/#/g, () => nums[i++] ?? "");
+}
 
 export function traduzir(idioma: Idioma, texto: string): string {
-  return DIC[idioma][texto] ?? texto;
+  const d = DIC[idioma];
+  const s = texto.trim();
+  if (!s) return texto;
+  const r = exato(d, s);
+  if (r !== undefined) return texto.replace(s, r);
+  // Composite labels such as "Alimentador · Estado: Aberta".
+  const partes = s.split(/( · | — | → |: |, )/);
+  if (partes.length > 1) {
+    let mudou = false;
+    const out = partes.map((p) => {
+      const t = exato(d, p.trim());
+      if (t !== undefined && t !== p) { mudou = true; return p.replace(p.trim(), t); }
+      return p;
+    });
+    if (mudou) return texto.replace(s, out.join(""));
+  }
+  return texto;
 }
 
 type S = { idioma: Idioma; setIdioma: (i: Idioma) => void };
