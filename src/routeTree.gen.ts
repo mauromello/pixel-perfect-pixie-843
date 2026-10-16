@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedIaRouteImport } from './routes/_authenticated/ia'
+import { Route as AuthenticatedManobrasRouteImport } from './routes/_authenticated/manobras'
 import { Route as AuthenticatedMapasRouteImport } from './routes/_authenticated/mapas'
 import { Route as AuthenticatedMetodologiaRouteImport } from './routes/_authenticated/metodologia'
 import { Route as AuthenticatedProjecaoRouteImport } from './routes/_authenticated/projecao'
@@ -43,6 +44,11 @@ const AuthenticatedIaRoute = AuthenticatedIaRouteImport.update({
   path: '/ia',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedManobrasRoute = AuthenticatedManobrasRouteImport.update({
+  id: '/manobras',
+  path: '/manobras',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMapasRoute = AuthenticatedMapasRouteImport.update({
   id: '/mapas',
   path: '/mapas',
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/ia': typeof AuthenticatedIaRoute
+  '/manobras': typeof AuthenticatedManobrasRoute
   '/mapas': typeof AuthenticatedMapasRoute
   '/metodologia': typeof AuthenticatedMetodologiaRoute
   '/projecao': typeof AuthenticatedProjecaoRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/ia': typeof AuthenticatedIaRoute
+  '/manobras': typeof AuthenticatedManobrasRoute
   '/mapas': typeof AuthenticatedMapasRoute
   '/metodologia': typeof AuthenticatedMetodologiaRoute
   '/projecao': typeof AuthenticatedProjecaoRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/ia': typeof AuthenticatedIaRoute
+  '/_authenticated/manobras': typeof AuthenticatedManobrasRoute
   '/_authenticated/mapas': typeof AuthenticatedMapasRoute
   '/_authenticated/metodologia': typeof AuthenticatedMetodologiaRoute
   '/_authenticated/projecao': typeof AuthenticatedProjecaoRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin'
     | '/ia'
+    | '/manobras'
     | '/mapas'
     | '/metodologia'
     | '/projecao'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin'
     | '/ia'
+    | '/manobras'
     | '/mapas'
     | '/metodologia'
     | '/projecao'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/admin'
     | '/_authenticated/ia'
+    | '/_authenticated/manobras'
     | '/_authenticated/mapas'
     | '/_authenticated/metodologia'
     | '/_authenticated/projecao'
@@ -173,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manobras': {
+      id: '/_authenticated/manobras'
+      path: '/manobras'
+      fullPath: '/manobras'
+      preLoaderRoute: typeof AuthenticatedManobrasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/mapas': {
       id: '/_authenticated/mapas'
       path: '/mapas'
@@ -207,6 +226,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedIaRoute: typeof AuthenticatedIaRoute
+  AuthenticatedManobrasRoute: typeof AuthenticatedManobrasRoute
   AuthenticatedMapasRoute: typeof AuthenticatedMapasRoute
   AuthenticatedMetodologiaRoute: typeof AuthenticatedMetodologiaRoute
   AuthenticatedProjecaoRoute: typeof AuthenticatedProjecaoRoute
@@ -217,6 +237,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedIaRoute: AuthenticatedIaRoute,
+  AuthenticatedManobrasRoute: AuthenticatedManobrasRoute,
   AuthenticatedMapasRoute: AuthenticatedMapasRoute,
   AuthenticatedMetodologiaRoute: AuthenticatedMetodologiaRoute,
   AuthenticatedProjecaoRoute: AuthenticatedProjecaoRoute,

@@ -10,6 +10,11 @@ export const IDIOMAS: { id: Idioma; rotulo: string }[] = [
 // Portuguese text is the key; missing entries fall back to Portuguese.
 const EN: Record<string, string> = {
   "Balanço e Manobras": "Balance & Switching",
+  "Balanço Energético": "Energy Balance",
+  "Simulação de Manobras": "Switching Simulation",
+  "Feche uma chave de interligação e abra uma seccionadora para transferir carga entre alimentadores": "Close a tie switch and open a sectionalizer to transfer load between feeders",
+  "Ver no mapa": "View on map",
+  "Ver balanço": "View balance",
   "Gestão do Modelo de Rede": "Network Model Management",
   "Projeção e Simulação": "Forecast & Simulation",
   "Mapas Geoespaciais": "Geospatial Maps",

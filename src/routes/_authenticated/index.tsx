@@ -3,7 +3,6 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PageHeader } from "@/components/AppShell";
-import { Manobras } from "@/components/Manobras";
 import { PainelBalancoFisico } from "@/components/BalancoFisico";
 import { PerdasNiveis } from "@/components/PerdasNiveis";
 import { RelatorioBalanco } from "@/components/RelatorioBalanco";
@@ -12,10 +11,10 @@ import { arvore, balanco, criticas, fontesBalanco, type Node } from "@/lib/mock-
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
-      { title: "Balanço Energético e Manobras — PerdaZero" },
+      { title: "Balanço Energético — PerdaZero" },
       { name: "description", content: "Cálculo e gestão do balanço energético por elemento da rede de distribuição." },
-      { property: "og:title", content: "Balanço Energético e Manobras — PerdaZero" },
-      { property: "og:description", content: "Balanço energético e simulação de manobras na rede de Minas Gerais." },
+      { property: "og:title", content: "Balanço Energético — PerdaZero" },
+      { property: "og:description", content: "Balanço energético por elemento da rede de Minas Gerais." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -122,7 +121,6 @@ function BalancoPage() {
 
           <PerdasNiveis />
 
-          <Manobras />
 
           <div className="panel overflow-auto">
             <div className="panel-h">Indicadores de Críticas de Dados</div>
