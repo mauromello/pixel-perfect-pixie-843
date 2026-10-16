@@ -53,7 +53,7 @@ export default function MapaView() {
   return (
     <div className="relative h-screen">
       <MapContainer center={centro} zoom={12} className="h-full w-full" zoomControl={false}>
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap &copy; CARTO" />
+        <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
         <FlyTo pos={alvo} />
         {camadas.filter((c) => ativas[c.k] && c.k !== "rede").map((c) =>
           zonas(c.k).map((z, i) => (
