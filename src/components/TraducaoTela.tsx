@@ -29,7 +29,7 @@ export function TraducaoTela() {
         if (!o) { o = {}; attrOrig.set(el, o); }
         const ap = o["__" + a];
         if (ap !== v) o[a] = v;
-        const novo = traduzir(idioma, o[a]);
+        const novo = traduzir(idioma, o[a] ?? v);
         o["__" + a] = novo;
         if (novo !== v) el.setAttribute(a, novo);
       }
