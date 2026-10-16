@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -111,14 +111,9 @@ function BalancoPage() {
             </div>
             <div className="panel">
               <div className="panel-h">Metodologia e Cálculo</div>
-              <div className="space-y-2 p-4">
-                <button className="btn w-full justify-center" onClick={() => setMsg("Balanço calculado segundo metodologia análoga ao IPTD/Regulatório (PRODIST Módulo 7).")}>Calcular Balanço Análogo ao IPTD/Regulatório</button>
-                <button className="btn w-full justify-center" onClick={() => setMsg(`Área de sub-balanço definida a partir de "${sel.nome}".`)}>Definir Áreas de Sub-balanço</button>
-                <label className="block pt-2 text-xs text-muted-foreground">Inserir % de Perdas Técnicas</label>
-                <div className="flex gap-2">
-                  <input className="inp w-full" type="number" step="0.1" placeholder={b.ptPct.toFixed(1)} value={ptManual} onChange={(e) => setPtManual(e.target.value)} />
-                  <button className="btn-primary whitespace-nowrap" onClick={() => { setPtManual(""); setMsg("Motor de cálculo de perdas técnicas acionado (fluxo de potência)."); }}>Acionar Motor</button>
-                </div>
+              <div className="space-y-2 p-4 text-sm">
+                <p className="text-muted-foreground">Motores de perdas, sub-balanços geoelétricos, gap regulatório e auditoria de medições.</p>
+                <Link to="/metodologia" className="btn-primary w-full justify-center">Abrir módulo de Metodologia</Link>
               </div>
             </div>
           </div>
