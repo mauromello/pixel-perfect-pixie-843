@@ -3,8 +3,8 @@ import { aplicarMetodologia, balancoAlimentador, balancoSubestacao, energiaForne
 
 const al = (): Alimentador => ({
   id: "a", cod: "X", entradaDisjuntor: 1000, exportacaoFronteira: 50, usoInterno: 10, iluminacaoPublica: 20,
-  condutor: { r: 0, comprimento: 0, corrente: 0 },
-  trafos: [{ id: "t", nome: "T", p0: 0, pcu: 0, srated: 100, clientes: [
+  condutor: { r: 0, comprimento: 0, corrente: 0 }, tensaoKV: 13.8, ampacidade: 400, cor: "x", segmentos: [],
+  trafos: [{ id: "t", nome: "T", p0: 0, pcu: 0, srated: 100, segmentoId: "", lat: 0, lng: 0, tensaoPrimKV: 13.8, tensaoSecV: 220, clientes: [
     { id: "1", nome: "c", tipo: "cativo", importacao: 600, exportacao: 0 },
     { id: "2", nome: "l", tipo: "livre", importacao: 200, exportacao: 0 },
     { id: "3", nome: "g", tipo: "gd", importacao: 30, exportacao: 80 },
@@ -24,7 +24,7 @@ describe("calculationEngine", () => {
     expect(b.lNT).toBeCloseTo(b.lTotal - b.lTecnica);
   });
   it("substation balance subtracts feeder outputs and station service", () => {
-    const s = { id: "s", nome: "S", entradaAT: 2500, geracaoLocal: 100, servicoAuxiliar: 40, alvoPT: 7, alvoPNT: 3, alimentadores: [al(), al()] };
+    const s = { id: "s", nome: "S", regional: "", municipio: "", lat: 0, lng: 0, tensaoATkV: 138, tensaoMTkV: 13.8, entradaAT: 2500, geracaoLocal: 100, servicoAuxiliar: 40, alvoPT: 7, alvoPNT: 3, alimentadores: [al(), al()] };
     expect(balancoSubestacao(s).lTotal).toBe(2500 + 100 - 2000 - 40);
   });
   it("regulatory method overrides losses with PRORET targets and shows exposure", () => {

@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { ImportExportBDGD } from "@/components/ImportExportBDGD";
+import { perdasPorNivel } from "@/lib/calculationEngine";
 import { PageHeader } from "@/components/AppShell";
 import { GraficoAlimentador } from "@/components/BalancoFisico";
 import type { TipoCliente } from "@/lib/calculationEngine";
@@ -50,14 +52,15 @@ function RedePage() {
   return (
     <div>
       <PageHeader title="Gestão do Modelo de Rede" subtitle="Topologia Subestação → Alimentador → Transformador → Instalação e parâmetros técnicos" />
+      <div className="px-6 pt-6"><ImportExportBDGD /></div>
       <div className="grid gap-4 p-6 lg:grid-cols-[300px_1fr]">
         <div className="panel max-h-[720px] overflow-auto">
           <div className="panel-h">Topologia</div>
           <div className="p-2">
             {st.subestacoes.map((s) => [
-              item({ tipo: "se", id: s.id }, s.nome, "SE", 0),
+              item({ tipo: "se", id: s.id }, `${s.nome} · ${s.tensaoATkV} kV`, "SE", 0),
               ...s.alimentadores.map((a) => [
-                item({ tipo: "al", id: a.id }, a.cod, "Alim.", 1),
+                item({ tipo: "al", id: a.id }, `${a.cod} · ${a.tensaoKV} kV`, "Alim.", 1),
                 ...a.trafos.map((t) => [
                   item({ tipo: "tr", id: t.id }, t.nome, "Trafo", 2),
                   ...t.clientes.map((c) => (
@@ -81,7 +84,12 @@ function RedePage() {
                 <Num label="Serviço auxiliar" unit="MWh" value={se.servicoAuxiliar} onChange={(v) => st.updSubestacao(se.id, { servicoAuxiliar: v })} />
                 <Num label="Alvo regulatório PT" unit="%" value={se.alvoPT} onChange={(v) => st.updSubestacao(se.id, { alvoPT: v })} />
                 <Num label="Alvo regulatório PNT" unit="%" value={se.alvoPNT} onChange={(v) => st.updSubestacao(se.id, { alvoPNT: v })} />
+                <Num label="Tensão AT (BaseVoltage)" unit="kV" value={se.tensaoATkV} onChange={(v) => st.updSubestacao(se.id, { tensaoATkV: v })} />
+                <Num label="Tensão MT secundária" unit="kV" value={se.tensaoMTkV} onChange={(v) => st.updSubestacao(se.id, { tensaoMTkV: v })} />
+                <Num label="Latitude" unit="°" value={se.lat} onChange={(v) => st.updSubestacao(se.id, { lat: v })} />
+                <Num label="Longitude" unit="°" value={se.lng} onChange={(v) => st.updSubestacao(se.id, { lng: v })} />
               </div>
+              {(() => { const p = perdasPorNivel(se); return <p className="px-4 pb-4 text-xs text-muted-foreground">Perdas técnicas: AT {p.at.toFixed(1)} · MT {p.mt.toFixed(1)} · BT {p.bt.toFixed(1)} MWh</p>; })()}
             </div>
           )}
 
@@ -97,7 +105,23 @@ function RedePage() {
                   <Num label="Resistência R" unit="Ω/km" value={al.condutor.r} onChange={(v) => st.updCondutor(al.id, { r: v })} />
                   <Num label="Comprimento" unit="km" value={al.condutor.comprimento} onChange={(v) => st.updCondutor(al.id, { comprimento: v })} />
                   <Num label="Corrente I" unit="A" value={al.condutor.corrente} onChange={(v) => st.updCondutor(al.id, { corrente: v })} />
+                  <Num label="Tensão nominal (BaseVoltage)" unit="kV" value={al.tensaoKV} onChange={(v) => st.updAlimentador(al.id, { tensaoKV: v })} />
+                  <Num label="Ampacidade do tronco" unit="A" value={al.ampacidade} onChange={(v) => st.updAlimentador(al.id, { ampacidade: v })} />
                 </div>
+              </div>
+              <div className="panel overflow-auto">
+                <div className="panel-h">Trechos (ACLineSegment) e Chaves (Switch) do Alimentador</div>
+                <table className="tbl">
+                  <thead><tr><th>Trecho</th><th>Comprimento</th><th>Chaves no trecho</th></tr></thead>
+                  <tbody>{al.segmentos.map((g) => (
+                    <tr key={g.id}><td className="font-mono">{g.cod}</td><td className="font-mono">{g.comprimento.toFixed(2)} km</td>
+                      <td>{st.chaves.filter((c) => (c.alimentadorId === al.id && c.segmentoId === g.id) || (c.alimentadorBId === al.id && c.segmentoBId === g.id)).map((c) => (
+                        <label key={c.id} className="mr-3 inline-flex items-center gap-1 text-xs">{c.cod} ({c.tipo})
+                          <select className="inp py-0 text-xs" value={c.normalAberta ? "NA" : "NF"} onChange={(e) => st.updChave(c.id, { normalAberta: e.target.value === "NA", aberta: e.target.value === "NA" })}><option>NF</option><option>NA</option></select>
+                        </label>
+                      ))}</td></tr>
+                  ))}</tbody>
+                </table>
               </div>
               <div className="panel overflow-auto">
                 <div className="panel-h">Clientes e Geração Distribuída do Alimentador</div>
@@ -140,6 +164,10 @@ function RedePage() {
                 <Num label="Perda no núcleo P0" unit="kW" value={tr.p0} onChange={(v) => st.updTrafo(tr.id, { p0: v })} />
                 <Num label="Perda no cobre Pcu" unit="kW" value={tr.pcu} onChange={(v) => st.updTrafo(tr.id, { pcu: v })} />
                 <Num label="Potência nominal Srated" unit="kVA" value={tr.srated} onChange={(v) => st.updTrafo(tr.id, { srated: v })} />
+                <Num label="Tensão primária" unit="kV" value={tr.tensaoPrimKV} onChange={(v) => st.updTrafo(tr.id, { tensaoPrimKV: v })} />
+                <Num label="Tensão secundária" unit="V" value={tr.tensaoSecV} onChange={(v) => st.updTrafo(tr.id, { tensaoSecV: v })} />
+                <Num label="Latitude" unit="°" value={tr.lat} onChange={(v) => st.updTrafo(tr.id, { lat: v })} />
+                <Num label="Longitude" unit="°" value={tr.lng} onChange={(v) => st.updTrafo(tr.id, { lng: v })} />
               </div>
             </div>
           )}

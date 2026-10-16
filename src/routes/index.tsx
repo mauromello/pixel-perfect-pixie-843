@@ -5,6 +5,7 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { PageHeader } from "@/components/AppShell";
 import { Manobras } from "@/components/Manobras";
 import { PainelBalancoFisico } from "@/components/BalancoFisico";
+import { PerdasNiveis } from "@/components/PerdasNiveis";
 import { arvore, balanco, criticas, fontesBalanco, type Node } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
@@ -120,6 +121,8 @@ function BalancoPage() {
           </div>
 
           <PainelBalancoFisico />
+
+          <PerdasNiveis />
 
           <Manobras />
 
