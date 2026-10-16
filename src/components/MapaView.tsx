@@ -6,6 +6,7 @@ import { balancoAlimentador, perdasPorNivel, type Coord } from "@/lib/calculatio
 import { useRede } from "@/lib/network-store";
 import { alertaRegulatorio, carregamentoTrafo, sobrecargaAlimentador, trechosDesenergizados } from "@/lib/estadoRede";
 import { COS, rotacao, svgDisjuntor, svgFusivel, svgSeccionadora, svgSubestacao, svgTrafo } from "@/lib/simbologia";
+import { areasCriticas, areasRisco, COR_TEC, indicadoresTrafos, TECNOLOGIAS, TEMAS, type TemaId } from "@/lib/tematicos";
 
 const fmt = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 const COR_ABERTA = COS.fechado, COR_SE = COS.se;
@@ -60,6 +61,14 @@ function Desenho({ ativo, onPonto }: { ativo: boolean; onPonto: (p: [number, num
 export default function MapaView() {
   const { subestacoes, chaves, origemModelo } = useRede();
   const [ativas, setAtivas] = useState<Record<string, boolean>>({ at: true, mt: true, bt: true, ch: true });
+  const [tema, setTema] = useState<TemaId | "">("");
+  const [risco, setRisco] = useState(false);
+  const [tecs, setTecs] = useState<Record<string, boolean>>({});
+  const indicadores = useMemo(() => subestacoes.flatMap((s) => s.alimentadores.flatMap(indicadoresTrafos)), [subestacoes]);
+  const riscos = useMemo(() => areasRisco(subestacoes), [subestacoes]);
+  const temaInfo = TEMAS.find((t) => t.id === tema);
+  const maxTema = tema ? Math.max(1e-9, ...indicadores.map((i) => i[tema])) : 1;
+  const criticas = tema ? areasCriticas(indicadores, tema) : [];
   const [tipo, setTipo] = useState("Alimentador");
   const [q, setQ] = useState("");
   const [alvo, setAlvo] = useState<[number, number] | null>(null);
