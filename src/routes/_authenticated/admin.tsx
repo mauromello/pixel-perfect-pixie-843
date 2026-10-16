@@ -4,7 +4,7 @@ import { RefreshCw, ShieldCheck, Users } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { dicionario, perfis, usuariosAD } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/admin")({
+export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
       { title: "Configurações, Dicionário e Segurança — PerdaZero" },

@@ -5,7 +5,7 @@ import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, X
 import { PageHeader } from "@/components/AppShell";
 import { elementosProjecao, hash } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/projecao")({
+export const Route = createFileRoute("/_authenticated/projecao")({
   head: () => ({
     meta: [
       { title: "Projeção e Simulação de Perdas — PerdaZero" },

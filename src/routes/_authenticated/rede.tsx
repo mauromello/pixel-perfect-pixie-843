@@ -8,7 +8,7 @@ import { GraficoAlimentador } from "@/components/BalancoFisico";
 import type { TipoCliente } from "@/lib/calculationEngine";
 import { useRede } from "@/lib/network-store";
 
-export const Route = createFileRoute("/rede")({
+export const Route = createFileRoute("/_authenticated/rede")({
   head: () => ({
     meta: [
       { title: "Gestão do Modelo de Rede — PerdaZero" },

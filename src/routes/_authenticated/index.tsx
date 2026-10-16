@@ -8,7 +8,7 @@ import { PainelBalancoFisico } from "@/components/BalancoFisico";
 import { PerdasNiveis } from "@/components/PerdasNiveis";
 import { arvore, balanco, criticas, fontesBalanco, type Node } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Balanço Energético e Manobras — PerdaZero" },

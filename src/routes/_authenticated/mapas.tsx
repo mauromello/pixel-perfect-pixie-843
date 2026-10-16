@@ -3,7 +3,7 @@ import { lazy, Suspense } from "react";
 
 const MapaView = lazy(() => import("@/components/MapaView"));
 
-export const Route = createFileRoute("/mapas")({
+export const Route = createFileRoute("/_authenticated/mapas")({
   head: () => ({
     meta: [
       { title: "Mapas Geoespaciais — PerdaZero" },
