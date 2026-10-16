@@ -73,6 +73,8 @@ export default function MapaView() {
   const todosPts = useMemo<Coord[]>(() => [...subestacoes.map((s) => [s.lat, s.lng] as Coord), ...feeders.flatMap(({ a }) => a.segmentos.flatMap((g) => g.coords))], [subestacoes]); // eslint-disable-line react-hooks/exhaustive-deps
   const corDe = (id: string | undefined) => feeders.find((f) => f.a.id === id)?.a.cor ?? COR_SE;
   const codDe = (id: string | undefined) => feeders.find((f) => f.a.id === id)?.a.cod ?? "—";
+  const desligados = new Map(feeders.map(({ a }) => [a.id, trechosDesenergizados(a, chaves)]));
+  const [legAberta, setLegAberta] = useState(true);
 
   const buscar = () => {
     setErro("");
@@ -200,6 +202,23 @@ export default function MapaView() {
               ))}
             </div>
           </div>
+        </div>
+        <div className="panel">
+          <button className="panel-h w-full" onClick={() => setLegAberta(!legAberta)} aria-label="Legenda operacional">
+            <span className="flex items-center gap-2"><BookOpen size={14} /> Legenda Operacional (COS · ABNT/CIM)</span>
+            <ChevronDown size={14} className={legAberta ? "rotate-180" : ""} />
+          </button>
+          {legAberta && (
+            <div className="max-h-72 space-y-1.5 overflow-y-auto p-3 text-xs">
+              {legenda.map((x) => (
+                <div key={x.l} className="flex items-center gap-2"><span className="flex w-12 justify-center" dangerouslySetInnerHTML={{ __html: x.svg }} />{x.l}</div>
+              ))}
+              <div className="flex items-center gap-2"><span className="flex w-12 justify-center"><span className="h-1 w-10 rounded" style={{ background: "oklch(0.55 0.17 250)" }} /></span>Trecho MT energizado (cor do alimentador)</div>
+              <div className="flex items-center gap-2"><span className="flex w-12 justify-center"><span className="w-10 border-t-4 border-dotted" style={{ borderColor: COS.desenergizado }} /></span>Trecho desenergizado (jusante de chave aberta)</div>
+              <div className="flex items-center gap-2"><span className="flex w-12 justify-center"><span className="h-2.5 w-10 rounded" style={{ background: COS.sobrecarga, opacity: 0.35 }} /></span>Trecho com sobrecarga (I &gt; ampacidade)</div>
+              <p className="pt-1 text-muted-foreground">Vermelho = fechado/energizado · Verde = aberto/seguro.</p>
+            </div>
+          )}
         </div>
         <div className="panel">
           <div className="panel-h"><span className="flex items-center gap-2"><PenTool size={14} /> Seleção por Polígono</span>{poly.length > 0 && <button onClick={limpar} aria-label="Limpar"><X size={14} /></button>}</div>
