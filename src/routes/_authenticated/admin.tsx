@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { RefreshCw, ShieldCheck, Users } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
-import { dicionario, perfis, usuariosAD } from "@/lib/mock-data";
+import { dicionario } from "@/lib/mock-data";
+import { GestaoUsuarios } from "@/components/GestaoUsuarios";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -19,14 +18,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 const hierarquia = ["Distribuidora", "Regional", "Município", "Subestação (SE)", "Alimentador", "Religador", "Transformador", "Medidor", "Instalação (UC)"];
-const permCls = (p: string) => (p === "Editar" ? "bg-primary/15 text-primary" : p === "Ver" ? "bg-muted text-muted-foreground" : "text-muted-foreground");
 
 function AdminPage() {
-  const [usuarios, setUsuarios] = useState(usuariosAD);
-  const [sync, setSync] = useState("16/10/2026 06:00");
-  const [filtro, setFiltro] = useState("");
   const grupos = [...new Set(dicionario.map((d) => d.grupo))];
-  const lista = usuarios.filter((u) => (u.nome + u.login + u.ou).toLowerCase().includes(filtro.toLowerCase()));
 
   return (
     <div>
