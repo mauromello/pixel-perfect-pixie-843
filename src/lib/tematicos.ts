@@ -48,7 +48,7 @@ export function indicadoresTrafos(a: Alimentador): IndicadorTrafo[] {
       fraude: Math.round(r * 6 + riscoPNT * 40),
       clandestina: Math.round(semente(t.id + "c") * 4 + riscoPNT * 20),
       impedimento: Math.round(semente(t.id + "i") * 120) / 10,
-      tecnologia: semente(t.id + "t") < 0.55 ? TECNOLOGIAS[Math.floor(semente(t.id + "k") * TECNOLOGIAS.length)] : null,
+      tecnologia: semente(t.id + "t") < 0.55 ? (TECNOLOGIAS[Math.floor(semente(t.id + "k") * TECNOLOGIAS.length)] ?? null) : null,
       clientes: t.clientes.length,
     };
   });
