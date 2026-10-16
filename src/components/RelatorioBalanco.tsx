@@ -14,13 +14,13 @@ export function RelatorioBalanco({ onClose }: { onClose: () => void }) {
     const perdaPct = pct(b.lTotal, b.entradaLiquida);
     return { s, a, b, m, perdaPct, acima: perdaPct > s.alvoPT + s.alvoPNT };
   }));
-  const tot = linhas.reduce((x, l) => ({ ent: x.ent + l.b.entradaLiquida, forn: x.forn + l.b.fornecida, pt: x.pt + l.m.pt, pnt: x.pnt + l.m.pnt }), { ent: 0, forn: 0, pt: 0, pnt: 0 });
+  const tot = linhas.reduce((x, l) => ({ ent: x.ent + l.b.entradaLiquida, forn: x.forn + l.b.fornecida.total, pt: x.pt + l.m.pt, pnt: x.pnt + l.m.pnt }), { ent: 0, forn: 0, pt: 0, pnt: 0 });
   const criticos = [...linhas].sort((x, y) => y.perdaPct - x.perdaPct).slice(0, 3);
   const agora = new Date().toLocaleString("pt-BR");
 
   const csv = () => {
     const cab = "subestacao;alimentador;tensao_kv;entrada_mwh;fornecida_mwh;pt_mwh;pnt_mwh;perda_total_pct;meta_pct;situacao";
-    const ls = linhas.map((l) => [l.s.nome, l.a.cod, l.a.tensaoKV, l.b.entradaLiquida.toFixed(2), l.b.fornecida.toFixed(2), l.m.pt.toFixed(2), l.m.pnt.toFixed(2), l.perdaPct.toFixed(2), (l.s.alvoPT + l.s.alvoPNT).toFixed(2), l.acima ? "ACIMA DA META" : "OK"].join(";"));
+    const ls = linhas.map((l) => [l.s.nome, l.a.cod, l.a.tensaoKV, l.b.entradaLiquida.toFixed(2), l.b.fornecida.total.toFixed(2), l.m.pt.toFixed(2), l.m.pnt.toFixed(2), l.perdaPct.toFixed(2), (l.s.alvoPT + l.s.alvoPNT).toFixed(2), l.acima ? "ACIMA DA META" : "OK"].join(";"));
     const blob = new Blob(["\uFEFF" + [cab, ...ls].join("\n")], { type: "text/csv;charset=utf-8" });
     const el = document.createElement("a");
     el.href = URL.createObjectURL(blob);
@@ -55,7 +55,7 @@ export function RelatorioBalanco({ onClose }: { onClose: () => void }) {
         <table className="tbl mb-6">
           <thead><tr><th>Subestação</th><th>Alimentador</th><th>kV</th><th>Entrada</th><th>Fornecida</th><th>PT</th><th>PNT</th><th>Perda %</th><th>Meta %</th><th>Situação</th></tr></thead>
           <tbody>{linhas.map((l) => (
-            <tr key={l.a.id}><td>{l.s.nome}</td><td className="font-mono">{l.a.cod}</td><td className="font-mono">{l.a.tensaoKV}</td><td className="font-mono">{fmt(l.b.entradaLiquida)}</td><td className="font-mono">{fmt(l.b.fornecida)}</td><td className="font-mono">{fmt(l.m.pt)}</td><td className="font-mono">{fmt(l.m.pnt)}</td><td className="font-mono font-semibold">{l.perdaPct.toFixed(2)}</td><td className="font-mono">{(l.s.alvoPT + l.s.alvoPNT).toFixed(2)}</td>
+            <tr key={l.a.id}><td>{l.s.nome}</td><td className="font-mono">{l.a.cod}</td><td className="font-mono">{l.a.tensaoKV}</td><td className="font-mono">{fmt(l.b.entradaLiquida)}</td><td className="font-mono">{fmt(l.b.fornecida.total)}</td><td className="font-mono">{fmt(l.m.pt)}</td><td className="font-mono">{fmt(l.m.pnt)}</td><td className="font-mono font-semibold">{l.perdaPct.toFixed(2)}</td><td className="font-mono">{(l.s.alvoPT + l.s.alvoPNT).toFixed(2)}</td>
               <td>{l.acima ? <span className="badge bg-destructive/15 text-destructive">Acima da meta</span> : <span className="badge bg-success/15 text-success">Dentro</span>}</td></tr>
           ))}</tbody>
         </table>
