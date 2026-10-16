@@ -22,6 +22,15 @@ export const Route = createFileRoute("/_authenticated/projecao")({
 
 type Sim = { id: number; data: string; elemento: string; horizonte: number; consumo: number; gd: number; gc: number; fiscal: number; pt: number; pnt: number };
 
+function Slider({ l, v, set, min, max, u }: { l: string; v: number; set: (n: number) => void; min: number; max: number; u: string }) {
+  return (
+    <div>
+      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{l}</span><span className="font-mono">{v} {u}</span></div>
+      <input type="range" className="w-full accent-[var(--primary)]" min={min} max={max} value={v} onChange={(e) => set(Number(e.target.value))} />
+    </div>
+  );
+}
+
 function ProjecaoPage() {
   const [elemento, setElemento] = useState<string>(elementosProjecao[0]!);
   const [horizonte, setHorizonte] = useState(12);
@@ -72,12 +81,6 @@ function ProjecaoPage() {
     exportar(nova);
   };
 
-  const Slider = ({ l, v, set, min, max, u }: { l: string; v: number; set: (n: number) => void; min: number; max: number; u: string }) => (
-    <div>
-      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{l}</span><span className="font-mono">{v} {u}</span></div>
-      <input type="range" className="w-full accent-[var(--primary)]" min={min} max={max} value={v} onChange={(e) => set(Number(e.target.value))} />
-    </div>
-  );
 
   return (
     <div>

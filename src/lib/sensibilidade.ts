@@ -7,7 +7,8 @@ export type Params = {
 
 /** PT/PNT (%) no mês i>0 do horizonte, sem sazonalidade. */
 export function projetarMes(p: Params, i: number): { pt: number; pnt: number } {
-  const f = i / 24;
+  // rampa de efeito: atinge 100% em 6 meses (horizontes curtos também respondem)
+  const f = Math.min(1, i / 6);
   // GD reduz PT até ~150 MW e eleva com fluxo reverso; GC em AT alivia carregamento
   const efGd = p.gd <= 150 ? -p.gd * 0.004 : -0.6 + (p.gd - 150) * 0.006;
   // Calor eleva demanda e resistência dos condutores (+PT); tarifa alta e PIB baixo elevam PNT
