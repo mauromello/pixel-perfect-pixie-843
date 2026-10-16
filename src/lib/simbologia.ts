@@ -47,7 +47,7 @@ export function svgTrafo(corAlim: string, sobrecarga: boolean, desenergizado: bo
 /** Subestação: pórtico com barramento + rótulo de tensão; selo âmbar se acima da meta regulatória. */
 export function svgSubestacao(at: number, mt: number, alerta: boolean) {
   const selo = alerta ? `<circle cx="40" cy="6" r="6" fill="${COS.alerta}" stroke="#fff" stroke-width="1.5"/><text x="40" y="9.5" font-size="9" font-weight="700" text-anchor="middle" fill="#fff">!</text>` : "";
-  return svg(46, 40, `<rect x="2" y="4" width="36" height="24" rx="2" fill="#f1f5f9" stroke="${COS.se}" stroke-width="2.5"/><line x1="8" y1="4" x2="8" y2="28" stroke="${COS.se}" stroke-width="2"/><line x1="32" y1="4" x2="32" y2="28" stroke="${COS.se}" stroke-width="2"/><line x1="6" y1="11" x2="34" y2="11" stroke="${COS.fechado}" stroke-width="3"/><line x1="6" y1="21" x2="34" y2="21" stroke="${COS.se}" stroke-width="2"/><rect x="0" y="30" width="40" height="10" rx="2" fill="${COS.se}"/><text x="20" y="38" font-size="7.5" font-weight="700" text-anchor="middle" fill="#fff">${at}/${mt} kV</text>${selo}`);
+  return svg(46, 40, `<rect x="2" y="4" width="36" height="24" rx="2" fill="#f1f5f9" stroke="${COS.se}" stroke-width="2.5"/><line x1="8" y1="4" x2="8" y2="28" stroke="${COS.se}" stroke-width="2"/><line x1="32" y1="4" x2="32" y2="28" stroke="${COS.se}" stroke-width="2"/><line x1="6" y1="11" x2="34" y2="11" stroke="${COS.fechado}" stroke-width="3"/><line x1="6" y1="21" x2="34" y2="21" stroke="${COS.se}" stroke-width="2"/><rect x="0" y="30" width="40" height="10" rx="2" fill="${COS.se}"/><text x="20" y="38" font-size="6.5" font-weight="700" text-anchor="middle" fill="#fff">${at}/${mt} kV</text>${selo}`);
 }
 
 /** Azimute (graus, tela) entre dois pontos lat/lng. */
