@@ -167,3 +167,9 @@
   .badge { @apply inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium; }
   .kpi { @apply font-mono text-xl font-semibold tabular-nums; }
 }
+
+@media print {
+  body:has(#relatorio) * { visibility: hidden; }
+  #relatorio, #relatorio * { visibility: visible; }
+  #relatorio { position: absolute; inset: 0 auto auto 0; width: 100%; }
+}

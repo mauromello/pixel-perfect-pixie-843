@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/AppShell";
 import { Manobras } from "@/components/Manobras";
 import { PainelBalancoFisico } from "@/components/BalancoFisico";
 import { PerdasNiveis } from "@/components/PerdasNiveis";
+import { RelatorioBalanco } from "@/components/RelatorioBalanco";
 import { arvore, balanco, criticas, fontesBalanco, type Node } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -56,6 +57,7 @@ function BalancoPage() {
   const [sel, setSel] = useState<Node>(arvore);
   const [ptManual, setPtManual] = useState("");
   const [msg, setMsg] = useState("");
+  const [rel, setRel] = useState(false);
   const [linhas, setLinhas] = useState(fontesBalanco);
   const b = balanco(sel.id);
   const ptPct = ptManual ? Number(ptManual) : b.ptPct;
@@ -65,10 +67,11 @@ function BalancoPage() {
   return (
     <div>
       <PageHeader title="Cálculo e Gestão do Balanço Energético" subtitle="Controle de medições: Regional → Município → SE → Alimentador → Religador → Trafo → Medidor → Instalação">
-        <button className="btn-primary" onClick={() => setMsg(`Relatório de resultados gerado para "${sel.nome}" (${new Date().toLocaleString("pt-BR")}).`)}>
+        <button className="btn-primary" onClick={() => setRel(true)}>
           <FileText size={14} /> Gerar Relatório de Resultados
         </button>
       </PageHeader>
+      {rel && <RelatorioBalanco onClose={() => setRel(false)} />}
       {msg && <div className="mx-6 mt-4 rounded border border-success/40 bg-success/10 px-3 py-2 text-sm">{msg}</div>}
       <div className="grid gap-4 p-6 lg:grid-cols-[300px_1fr]">
         <div className="panel max-h-[640px] overflow-auto">

@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Download, Save } from "lucide-react";
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PageHeader } from "@/components/AppShell";
 import { elementosProjecao, hash } from "@/lib/mock-data";
+import { projetarMes, sensibilidade, type Params } from "@/lib/sensibilidade";
 
 export const Route = createFileRoute("/_authenticated/projecao")({
   head: () => ({
@@ -28,30 +29,29 @@ function ProjecaoPage() {
   const [gd, setGd] = useState(80);
   const [gc, setGc] = useState(0);
   const [fiscal, setFiscal] = useState(10);
+  const [temperatura, setTemperatura] = useState(0);
+  const [tarifa, setTarifa] = useState(0);
+  const [pib, setPib] = useState(0);
   const [hist, setHist] = useState<Sim[]>([]);
 
+  const h = hash(elemento);
+  const params: Params = { basePt: 6.5 + (h % 25) / 10, basePnt: 4 + (h % 60) / 10, horizonte, consumo, gd, gc, fiscal, temperatura, tarifa, pib };
   const dados = useMemo(() => {
-    const h = hash(elemento);
-    const basePt = 6.5 + (h % 25) / 10;
-    const basePnt = 4 + (h % 60) / 10;
     const out: Record<string, string | number>[] = [];
     for (let i = -12; i <= horizonte; i++) {
       const mes = new Date(2026, 9 + i, 1).toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
       const saz = Math.sin((i + h) / 2) * 0.3;
       if (i <= 0) {
-        const pt = +(basePt + saz).toFixed(2), pnt = +(basePnt + saz * 1.5 - i * 0.02).toFixed(2);
+        const pt = +(params.basePt + saz).toFixed(2), pnt = +(params.basePnt + saz * 1.5 - i * 0.02).toFixed(2);
         out.push({ mes, ptHist: pt, pntHist: pnt, ...(i === 0 ? { ptProj: pt, pntProj: pnt } : {}) });
       } else {
-        const f = i / 24;
-        // GD (MW) reduz PT até ~150 MW e passa a elevar com fluxo reverso; GC conectada em AT reduz carregamento
-        const efGd = gd <= 150 ? -gd * 0.004 : -0.6 + (gd - 150) * 0.006;
-        const pt = basePt + saz + consumo * 0.03 * f * 2 + efGd * f * 2 - gc * 0.002 * f * 2;
-        const pnt = basePnt + saz * 1.5 + i * 0.03 + consumo * 0.02 * f - (fiscal / 100) * i * 0.12;
-        out.push({ mes, ptProj: +Math.max(pt, 0).toFixed(2), pntProj: +Math.max(pnt, 0).toFixed(2) });
+        const r = projetarMes(params, i);
+        out.push({ mes, ptProj: +Math.max(r.pt + saz, 0).toFixed(2), pntProj: +Math.max(r.pnt + saz * 1.5, 0).toFixed(2) });
       }
     }
     return out;
-  }, [elemento, horizonte, consumo, gd, gc, fiscal]);
+  }, [elemento, horizonte, consumo, gd, gc, fiscal, temperatura, tarifa, pib]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sens = useMemo(() => sensibilidade(params), [elemento, horizonte, consumo, gd, gc, fiscal, temperatura, tarifa, pib]); // eslint-disable-line react-hooks/exhaustive-deps
   const ult = dados[dados.length - 1]!;
   const ptF = Number(ult["ptProj"] ?? 0), pntF = Number(ult["pntProj"] ?? 0);
 
@@ -106,6 +106,9 @@ function ProjecaoPage() {
             <Slider l="Entrada de Geração Distribuída (GD)" v={gd} set={setGd} min={0} max={400} u="MW" />
             <Slider l="Entrada de Geração Centralizada (GC)" v={gc} set={setGc} min={0} max={300} u="MW" />
             <Slider l="Intensidade de fiscalização" v={fiscal} set={setFiscal} min={0} max={100} u="%" />
+            <Slider l="Variação de temperatura média" v={temperatura} set={setTemperatura} min={-5} max={5} u="°C" />
+            <Slider l="Reajuste tarifário" v={tarifa} set={setTarifa} min={-10} max={30} u="%" />
+            <Slider l="Variação do PIB regional" v={pib} set={setPib} min={-5} max={5} u="%" />
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded bg-muted p-3"><div className="text-xs text-muted-foreground">PT em {horizonte}m</div><div className="kpi">{ptF.toFixed(2)}%</div></div>
               <div className="rounded bg-muted p-3"><div className="text-xs text-muted-foreground">PNT em {horizonte}m</div><div className="kpi">{pntF.toFixed(2)}%</div></div>
@@ -129,6 +132,31 @@ function ProjecaoPage() {
                   <Line dataKey="pntProj" name="PNT projeção" stroke="var(--chart-2)" strokeDasharray="5 4" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="panel">
+            <div className="panel-h">Análise de Sensibilidade — impacto nas perdas em {horizonte}m (p.p.)</div>
+            <div className="grid gap-4 p-3 xl:grid-cols-[1fr_1fr]">
+              <div className="h-72">
+                <ResponsiveContainer>
+                  <BarChart data={sens.map((s) => ({ nome: s.nome, menos: +(s.ptMenos + s.pntMenos).toFixed(3), mais: +(s.ptMais + s.pntMais).toFixed(3) }))} layout="vertical" stackOffset="sign">
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" fontSize={11} />
+                    <YAxis type="category" dataKey="nome" width={130} fontSize={11} />
+                    <Tooltip />
+                    <Legend />
+                    <ReferenceLine x={0} stroke="var(--foreground)" />
+                    <Bar dataKey="menos" name="Variável −Δ" fill="var(--chart-1)" stackId="s" />
+                    <Bar dataKey="mais" name="Variável +Δ" fill="var(--chart-2)" stackId="s" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <table className="tbl">
+                <thead><tr><th>Variável</th><th>Δ</th><th>PT −/+</th><th>PNT −/+</th></tr></thead>
+                <tbody>{sens.map((s) => (
+                  <tr key={s.nome}><td>{s.nome}</td><td className="font-mono text-xs">{s.delta}</td><td className="font-mono text-xs">{s.ptMenos.toFixed(2)} / {s.ptMais.toFixed(2)}</td><td className="font-mono text-xs">{s.pntMenos.toFixed(2)} / {s.pntMais.toFixed(2)}</td></tr>
+                ))}</tbody>
+              </table>
             </div>
           </div>
           <div className="panel overflow-auto">
