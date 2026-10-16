@@ -154,4 +154,5 @@ export const EN_TELAS: Record<string, string> = {
   "Cadastro criado. Confirme pelo link enviado ao seu e-mail e depois entre.": "Account created. Confirm via the link sent to your email, then sign in.",
   "Novas contas entram com perfil Consulta até o administrador liberar outro perfil.": "New accounts start as Viewer until an administrator grants another profile.",
   "ou": "or",
+  "Não tem conta? Solicitar acesso": "No account? Request access", "Já tem conta? Entrar": "Have an account? Sign in", "Solicitar acesso": "Request access",
 };
