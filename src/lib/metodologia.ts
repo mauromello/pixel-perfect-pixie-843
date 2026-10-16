@@ -81,5 +81,5 @@ export function saudeCamadas(ses: Subestacao[]) {
   const altas = new Set(ach.filter((a) => a.severidade === "Alta").map((a) => a.elemento)).size;
   const medias = new Set(ach.filter((a) => a.severidade === "Média").map((a) => a.elemento)).size;
   const quedas = [0, 0, altas, altas + medias * 0.5, altas + medias * 0.5, altas + medias];
-  return CAMADAS.map((c, i) => ({ camada: c, pct: Math.max(0, 100 * (1 - quedas[i] / n)) }));
+  return CAMADAS.map((c, i) => ({ camada: c, pct: Math.max(0, 100 * (1 - (quedas[i] ?? 0) / n)) }));
 }
