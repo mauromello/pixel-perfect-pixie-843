@@ -1,8 +1,9 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import { Activity, BrainCircuit, Map, Scale, Settings, Zap } from "lucide-react";
+import { Activity, BrainCircuit, Map, Network, Scale, Settings, Zap } from "lucide-react";
 
 const itens = [
   { to: "/", label: "Balanço e Manobras", icon: Scale },
+  { to: "/rede", label: "Gestão do Modelo de Rede", icon: Network },
   { to: "/projecao", label: "Projeção e Simulação", icon: Activity },
   { to: "/mapas", label: "Mapas Geoespaciais", icon: Map },
   { to: "/ia", label: "IA, ML e Data Lake", icon: BrainCircuit },
