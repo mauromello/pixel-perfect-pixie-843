@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      configuracao: {
+        Row: {
+          exigir_login: boolean
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          exigir_login?: boolean
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          exigir_login?: boolean
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ativo: boolean
