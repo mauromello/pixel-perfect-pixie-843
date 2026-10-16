@@ -10,33 +10,73 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as IaRouteImport } from './routes/ia'
+import { Route as MapasRouteImport } from './routes/mapas'
+import { Route as ProjecaoRouteImport } from './routes/projecao'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IaRoute = IaRouteImport.update({
+  id: '/ia',
+  path: '/ia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapasRoute = MapasRouteImport.update({
+  id: '/mapas',
+  path: '/mapas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjecaoRoute = ProjecaoRouteImport.update({
+  id: '/projecao',
+  path: '/projecao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/ia': typeof IaRoute
+  '/mapas': typeof MapasRoute
+  '/projecao': typeof ProjecaoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/ia': typeof IaRoute
+  '/mapas': typeof MapasRoute
+  '/projecao': typeof ProjecaoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/ia': typeof IaRoute
+  '/mapas': typeof MapasRoute
+  '/projecao': typeof ProjecaoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/admin' | '/ia' | '/mapas' | '/projecao'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/admin' | '/ia' | '/mapas' | '/projecao'
+  id: '__root__' | '/' | '/admin' | '/ia' | '/mapas' | '/projecao'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  IaRoute: typeof IaRoute
+  MapasRoute: typeof MapasRoute
+  ProjecaoRoute: typeof ProjecaoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +88,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ia': {
+      id: '/ia'
+      path: '/ia'
+      fullPath: '/ia'
+      preLoaderRoute: typeof IaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mapas': {
+      id: '/mapas'
+      path: '/mapas'
+      fullPath: '/mapas'
+      preLoaderRoute: typeof MapasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projecao': {
+      id: '/projecao'
+      path: '/projecao'
+      fullPath: '/projecao'
+      preLoaderRoute: typeof ProjecaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  IaRoute: IaRoute,
+  MapasRoute: MapasRoute,
+  ProjecaoRoute: ProjecaoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
