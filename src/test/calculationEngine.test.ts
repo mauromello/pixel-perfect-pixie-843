@@ -24,7 +24,7 @@ describe("calculationEngine", () => {
     expect(b.lNT).toBeCloseTo(b.lTotal - b.lTecnica);
   });
   it("substation balance subtracts feeder outputs and station service", () => {
-    const s = { id: "s", nome: "S", entradaAT: 2500, geracaoLocal: 100, servicoAuxiliar: 40, alvoPT: 7, alvoPNT: 3, alimentadores: [al(), al()] };
+    const s = { id: "s", nome: "S", regional: "", municipio: "", lat: 0, lng: 0, tensaoATkV: 138, tensaoMTkV: 13.8, entradaAT: 2500, geracaoLocal: 100, servicoAuxiliar: 40, alvoPT: 7, alvoPNT: 3, alimentadores: [al(), al()] };
     expect(balancoSubestacao(s).lTotal).toBe(2500 + 100 - 2000 - 40);
   });
   it("regulatory method overrides losses with PRORET targets and shows exposure", () => {
