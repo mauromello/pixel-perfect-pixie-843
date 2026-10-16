@@ -125,6 +125,23 @@ export default function MapaView() {
         <FlyTo pos={alvo} />
         <Desenho ativo={desenhando} onPonto={(p) => setPoly((v) => [...v, p])} />
 
+        {risco && riscos.map((r) => (
+          <Polygon key={r.nome} positions={r.poly} pathOptions={{ color: COS.sobrecarga, weight: 2, dashArray: "6 4", fillOpacity: 0.12 }}><Popup>{r.nome}</Popup></Polygon>
+        ))}
+        {temaInfo && indicadores.map((i) => {
+          const v = i[temaInfo.id] / maxTema;
+          return (
+            <CircleMarker key={"tm" + i.id} center={[i.lat, i.lng]} radius={8 + v * 28} pathOptions={{ color: temaInfo.cor, fillColor: temaInfo.cor, fillOpacity: 0.15 + v * 0.45, weight: 1 }}>
+              <Popup><b>{i.nome}</b> ({i.alimentador})<br />{temaInfo.nome}: {fmt(i[temaInfo.id])} {temaInfo.unidade}<br />PT {fmt(i.pt)} MWh · PNT {fmt(i.pnt)} MWh<br />Inadimplência {fmt(i.inadimplencia)}% · Fraudes {i.fraude} · Clandestinas {i.clandestina}<br />Impedimento de leitura {fmt(i.impedimento)}% · Clientes {i.clientes}</Popup>
+            </CircleMarker>
+          );
+        })}
+        {indicadores.filter((i) => i.tecnologia && tecs[i.tecnologia]).map((i) => (
+          <CircleMarker key={"tc" + i.id} center={[i.lat + 0.0025, i.lng + 0.0025]} radius={6} pathOptions={{ color: "#fff", weight: 2, fillColor: COR_TEC[i.tecnologia!], fillOpacity: 1 }}>
+            <Popup><b>{i.tecnologia}</b> instalado em {i.nome} ({i.alimentador})</Popup>
+          </CircleMarker>
+        ))}
+
         {ativas["mt"] && feeders.map(({ a, s }) => {
           const b = balancoAlimentador(a);
           const off = desligados.get(a.id)!;
@@ -210,6 +227,34 @@ export default function MapaView() {
                 <div key={a.id} className="flex items-center gap-2 text-xs"><span className="h-1.5 w-5 rounded" style={{ background: a.cor }} />{a.cod}<span className="ml-auto font-mono text-muted-foreground">{a.tensaoKV} kV</span></div>
               ))}
             </div>
+          </div>
+        </div>
+        <div className="panel">
+          <div className="panel-h"><span className="flex items-center gap-2"><Flame size={14} /> Mapas Temáticos</span></div>
+          <div className="space-y-2 p-3 text-sm">
+            <select className="inp w-full" aria-label="Tema" value={tema} onChange={(e) => setTema(e.target.value as TemaId | "")}>
+              <option value="">— Sem tema —</option>
+              {TEMAS.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+            </select>
+            <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={risco} onChange={(e) => setRisco(e.target.checked)} /><span className="h-3 w-3 rounded-sm border-2 border-dashed" style={{ borderColor: COS.sobrecarga }} />Áreas de risco</label>
+            <div className="text-xs text-muted-foreground">Tecnologias de combate a perdas:</div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
+              {TECNOLOGIAS.map((t) => (
+                <label key={t} className="flex cursor-pointer items-center gap-1 text-xs"><input type="checkbox" checked={!!tecs[t]} onChange={(e) => setTecs({ ...tecs, [t]: e.target.checked })} /><span className="h-2.5 w-2.5 rounded-full" style={{ background: COR_TEC[t] }} />{t}</label>
+              ))}
+            </div>
+            {temaInfo && (
+              <div className="border-t border-border pt-2">
+                <div className="mb-1 text-xs font-semibold">Áreas críticas — {temaInfo.nome}</div>
+                {criticas.map((c) => (
+                  <button key={c.id} className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-muted" onClick={() => setAlvo([c.lat, c.lng])}>
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: temaInfo.cor }} />{c.nome}<span className="text-muted-foreground">{c.alimentador}</span>
+                    <span className="ml-auto font-mono">{fmt(c[temaInfo.id])} {temaInfo.unidade}</span>
+                  </button>
+                ))}
+                <p className="pt-1 text-[11px] text-muted-foreground">PT/PNT calculadas do modelo de rede; indicadores comerciais simulados até integração CCS/SAP.</p>
+              </div>
+            )}
           </div>
         </div>
         <div className="panel">
