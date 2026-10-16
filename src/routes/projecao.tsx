@@ -20,7 +20,7 @@ export const Route = createFileRoute("/projecao")({
 type Sim = { id: number; data: string; elemento: string; horizonte: number; consumo: number; infra: number; fiscal: number; final: number };
 
 function ProjecaoPage() {
-  const [elemento, setElemento] = useState(elementosProjecao[0]);
+  const [elemento, setElemento] = useState<string>(elementosProjecao[0]!);
   const [horizonte, setHorizonte] = useState(12);
   const [consumo, setConsumo] = useState(3);
   const [infra, setInfra] = useState(0);
@@ -44,7 +44,7 @@ function ProjecaoPage() {
     }
     return out;
   }, [elemento, horizonte, consumo, infra, fiscal]);
-  const final = dados[dados.length - 1].cenario ?? 0;
+  const final = dados[dados.length - 1]?.cenario ?? 0;
 
   const Slider = ({ l, v, set, min, max }: { l: string; v: number; set: (n: number) => void; min: number; max: number }) => (
     <div>

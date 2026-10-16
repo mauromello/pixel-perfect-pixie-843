@@ -79,7 +79,7 @@ function IaPage() {
               {logs.map((l, i) => (
                 <div key={i} className="border-b border-sidebar-border py-1.5">
                   <span className="opacity-60">{l.t}</span>{" "}
-                  <span className={l.e[0].startsWith("Detecção") ? "text-sidebar-primary" : "text-success"}>[{l.e[0]}]</span>{" "}
+                  <span className={l.e[0]!.startsWith("Detecção") ? "text-sidebar-primary" : "text-success"}>[{l.e[0]}]</span>{" "}
                   <span className="opacity-80">→ {l.e[1]}:</span> {l.e[2]}
                 </div>
               ))}
