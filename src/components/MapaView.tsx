@@ -1,17 +1,35 @@
-import { useEffect, useMemo, useState } from "react";
-import { CircleMarker, MapContainer, Polygon, Polyline, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
-import { Layers, PenTool, Search, X } from "lucide-react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import L from "leaflet";
+import { CircleMarker, MapContainer, Marker, Polygon, Polyline, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { BookOpen, ChevronDown, Layers, PenTool, Search, X } from "lucide-react";
 import { balancoAlimentador, perdasPorNivel, type Coord } from "@/lib/calculationEngine";
 import { useRede } from "@/lib/network-store";
+import { alertaRegulatorio, carregamentoTrafo, sobrecargaAlimentador, trechosDesenergizados } from "@/lib/estadoRede";
+import { COS, rotacao, svgDisjuntor, svgFusivel, svgSeccionadora, svgSubestacao, svgTrafo } from "@/lib/simbologia";
 
 const fmt = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
-const COR_FECHADA = "oklch(0.55 0.15 155)", COR_ABERTA = "oklch(0.58 0.21 27)", COR_SE = "oklch(0.2 0.035 245)";
+const COR_ABERTA = COS.fechado, COR_SE = COS.se;
+const icone = (html: string, w: number, h: number) => L.divIcon({ html, className: "", iconSize: [w, h], iconAnchor: [w / 2, h / 2], popupAnchor: [0, -h / 2] });
 
 const camadas = [
   { k: "at", l: "Subestações (AT)", c: COR_SE },
   { k: "mt", l: "Trechos MT (cor = alimentador atual)", c: "oklch(0.55 0.17 250)" },
-  { k: "bt", l: "Transformadores MT/BT", c: "oklch(0.8 0.15 75)" },
-  { k: "ch", l: "Chaves (verde fechada / vermelha aberta)", c: COR_FECHADA },
+  { k: "bt", l: "Transformadores MT/BT", c: COS.nucleo },
+  { k: "ch", l: "Chaves e interligações", c: COS.fechado },
+];
+
+const legenda: { svg: string; l: string }[] = [
+  { svg: svgSubestacao(138, 13.8, false), l: "Subestação (pórtico + barramento)" },
+  { svg: svgSubestacao(138, 13.8, true), l: "Subestação acima da meta PRORET" },
+  { svg: svgDisjuntor(false, false), l: "Disjuntor fechado (energizado)" },
+  { svg: svgDisjuntor(true, false), l: "Disjuntor aberto" },
+  { svg: svgDisjuntor(false, false, true), l: "Religador fechado" },
+  { svg: svgSeccionadora(false, false, 0), l: "Seccionadora fechada" },
+  { svg: svgSeccionadora(true, false, 0), l: "Seccionadora aberta" },
+  { svg: svgSeccionadora(false, true, 0), l: "Chave manobrada (fora do normal)" },
+  { svg: svgTrafo("#3b82f6", false, false), l: "Transformador normal" },
+  { svg: svgTrafo("#3b82f6", true, false), l: "Transformador em sobrecarga (>100%)" },
+  { svg: svgTrafo("#3b82f6", false, true), l: "Transformador desenergizado" },
 ];
 
 function dentro(p: { lat: number; lng: number }, poly: [number, number][]) {
@@ -98,33 +116,53 @@ export default function MapaView() {
 
         {ativas["mt"] && feeders.map(({ a, s }) => {
           const b = balancoAlimentador(a);
-          return a.segmentos.map((g) => (
-            <Polyline key={g.id} positions={g.coords} pathOptions={{ color: a.cor, weight: a.tensaoKV > 20 ? 6 : 4 }}>
-              <Popup><b>{g.cod}</b> — {a.cod} ({s.nome})<br />Tensão: {a.tensaoKV} kV · {fmt(g.comprimento)} km<br />Corrente: {fmt(a.condutor.corrente)} / {a.ampacidade} A<br />Perda total: {fmt(b.lTotal)} MWh · PT {fmt(b.lTecnica)} · PNT {fmt(b.lNT)}</Popup>
-            </Polyline>
-          ));
+          const off = desligados.get(a.id)!;
+          const sobre = sobrecargaAlimentador(a);
+          return a.segmentos.map((g) => {
+            const des = off.has(g.id);
+            const w = a.tensaoKV > 20 ? 6 : 4;
+            return (
+              <Fragment key={g.id}>
+                {sobre && !des && <Polyline positions={g.coords} pathOptions={{ color: COS.sobrecarga, weight: w + 8, opacity: 0.3 }} />}
+                <Polyline positions={g.coords} pathOptions={{ color: des ? COS.desenergizado : a.cor, weight: w, dashArray: des ? "2 7" : undefined, opacity: des ? 0.8 : 1 }}>
+                  <Popup><b>{g.cod}</b> — {a.cod} ({s.nome})<br />Estado: {des ? "DESENERGIZADO" : "ENERGIZADO"}{sobre ? " · SOBRECARGA" : ""}<br />Tensão: {a.tensaoKV} kV · {fmt(g.comprimento)} km<br />Corrente: {fmt(a.condutor.corrente)} / {a.ampacidade} A<br />Perda total: {fmt(b.lTotal)} MWh · PT {fmt(b.lTecnica)} · PNT {fmt(b.lNT)}</Popup>
+                </Polyline>
+              </Fragment>
+            );
+          });
         })}
         {ativas["ch"] && chaves.filter((c) => c.alimentadorBId).map((c) => {
           const a = feeders.find((f) => f.a.id === c.alimentadorId)?.a.segmentos.find((g) => g.id === c.segmentoId)?.coords.at(-1);
           const b = feeders.find((f) => f.a.id === c.alimentadorBId)?.a.segmentos.find((g) => g.id === c.segmentoBId)?.coords.at(-1);
-          return a && b ? <Polyline key={c.id + "l"} positions={[a, [c.lat, c.lng], b]} pathOptions={{ color: c.aberta ? COR_ABERTA : corDe(c.alimentadorBId), weight: 3, dashArray: c.aberta ? "6 6" : undefined }} /> : null;
+          return a && b ? <Polyline key={c.id + "l"} positions={[a, [c.lat, c.lng], b]} pathOptions={{ color: c.aberta ? COS.aberto : COS.fechado, weight: 3, dashArray: "6 6" }} /> : null;
         })}
-        {ativas["bt"] && trafos.map(({ t, a }) => (
-          <CircleMarker key={t.id} center={[t.lat, t.lng]} radius={5} pathOptions={{ color: a.cor, fillColor: "oklch(0.8 0.15 75)", fillOpacity: 1, weight: 2 }}>
-            <Popup><b>{t.nome}</b><br />{t.tensaoPrimKV} kV / {t.tensaoSecV} V · {t.srated} kVA<br />Alimentador: {a.cod}<br />Clientes: {t.clientes.length}</Popup>
-          </CircleMarker>
-        ))}
-        {ativas["ch"] && chaves.map((c) => (
-          <CircleMarker key={c.id} center={[c.lat, c.lng]} radius={6} pathOptions={{ color: c.aberta ? COR_ABERTA : COR_FECHADA, fillColor: c.aberta ? "white" : COR_FECHADA, fillOpacity: 1, weight: 3 }}>
-            <Popup><b>{c.cod}</b> ({c.tipo})<br />Estado: {c.aberta ? "ABERTA" : "FECHADA"} · Normal: {c.normalAberta ? "NA" : "NF"}<br />{c.alimentadorBId ? `Interliga ${codDe(c.alimentadorId)} ↔ ${codDe(c.alimentadorBId)}` : `Alimentador ${codDe(c.alimentadorId)}`}</Popup>
-          </CircleMarker>
-        ))}
+        {ativas["bt"] && trafos.map(({ t, a }) => {
+          const des = desligados.get(a.id)!.has(t.segmentoId);
+          const fc = carregamentoTrafo(t);
+          return (
+            <Marker key={t.id} position={[t.lat, t.lng]} icon={icone(svgTrafo(a.cor, fc > 1, des), 28, 20)}>
+              <Popup><b>{t.nome}</b><br />{t.tensaoPrimKV} kV / {t.tensaoSecV} V · {t.srated} kVA<br />Carregamento: {fmt(fc * 100)}%{fc > 1 ? " — SOBRECARGA" : ""}<br />Estado: {des ? "DESENERGIZADO" : "ENERGIZADO"}<br />Alimentador: {a.cod} · Clientes: {t.clientes.length}</Popup>
+            </Marker>
+          );
+        })}
+        {ativas["ch"] && chaves.map((c) => {
+          const manob = c.aberta !== c.normalAberta;
+          const seg = feeders.find((f) => f.a.id === c.alimentadorId)?.a.segmentos.find((g) => g.id === c.segmentoId)?.coords;
+          const rot = seg && seg.length > 1 ? rotacao(seg.at(-2)!, seg.at(-1)!) : 0;
+          const html = c.tipo === "seccionadora" ? svgSeccionadora(c.aberta, manob, rot) : c.tipo === "fusivel" ? svgFusivel(c.aberta) : svgDisjuntor(c.aberta, manob, c.tipo === "religador");
+          return (
+            <Marker key={c.id} position={[c.lat, c.lng]} icon={icone(html, 24, 24)} zIndexOffset={500}>
+              <Popup><b>{c.cod}</b> ({c.tipo})<br />Estado: {c.aberta ? "ABERTA" : "FECHADA"} · Normal: {c.normalAberta ? "NA" : "NF"}{manob ? " · MANOBRADA" : ""}<br />{c.alimentadorBId ? `Interliga ${codDe(c.alimentadorId)} ↔ ${codDe(c.alimentadorBId)}` : `Alimentador ${codDe(c.alimentadorId)}`}</Popup>
+            </Marker>
+          );
+        })}
         {ativas["at"] && subestacoes.map((s) => {
           const p = perdasPorNivel(s);
+          const al = alertaRegulatorio(s);
           return (
-            <CircleMarker key={s.id} center={[s.lat, s.lng]} radius={10} pathOptions={{ color: COR_SE, fillColor: "oklch(0.95 0.02 245)", fillOpacity: 1, weight: 3 }}>
-              <Popup><b>{s.nome}</b><br />{s.municipio} · {s.regional}<br />{s.tensaoATkV} / {s.tensaoMTkV} kV · {s.alimentadores.length} alimentadores<br />Perdas AT {fmt(p.at)} · MT {fmt(p.mt)} · BT {fmt(p.bt)} MWh</Popup>
-            </CircleMarker>
+            <Marker key={s.id} position={[s.lat, s.lng]} icon={icone(svgSubestacao(s.tensaoATkV, s.tensaoMTkV, al), 46, 40)} zIndexOffset={1000}>
+              <Popup><b>{s.nome}</b><br />{s.municipio} · {s.regional}<br />{s.tensaoATkV} / {s.tensaoMTkV} kV · {s.alimentadores.length} alimentadores<br />Perdas AT {fmt(p.at)} · MT {fmt(p.mt)} · BT {fmt(p.bt)} MWh{al ? <><br /><b>⚠ Acima da meta regulatória ({s.alvoPT + s.alvoPNT}%)</b></> : null}</Popup>
+            </Marker>
           );
         })}
 
