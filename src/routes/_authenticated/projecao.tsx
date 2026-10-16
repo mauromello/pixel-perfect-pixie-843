@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Download, Save } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PageHeader } from "@/components/AppShell";
+import { useT } from "@/lib/i18n";
 import { elementosProjecao, hash } from "@/lib/mock-data";
 import { projetarMes, sensibilidade, type Params } from "@/lib/sensibilidade";
 
@@ -23,9 +24,10 @@ export const Route = createFileRoute("/_authenticated/projecao")({
 type Sim = { id: number; data: string; elemento: string; horizonte: number; consumo: number; gd: number; gc: number; fiscal: number; pt: number; pnt: number };
 
 function Slider({ l, v, set, min, max, u }: { l: string; v: number; set: (n: number) => void; min: number; max: number; u: string }) {
+  const t = useT();
   return (
     <div>
-      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{l}</span><span className="font-mono">{v} {u}</span></div>
+      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t(l)}</span><span className="font-mono">{v} {u}</span></div>
       <input type="range" className="w-full accent-[var(--primary)]" min={min} max={max} value={v} onChange={(e) => set(Number(e.target.value))} />
     </div>
   );
@@ -42,6 +44,7 @@ function ProjecaoPage() {
   const [tarifa, setTarifa] = useState(0);
   const [pib, setPib] = useState(0);
   const [hist, setHist] = useState<Sim[]>([]);
+  const t = useT();
 
   const h = hash(elemento);
   const params: Params = { basePt: 6.5 + (h % 25) / 10, basePnt: 4 + (h % 60) / 10, horizonte, consumo, gd, gc, fiscal, temperatura, tarifa, pib };
@@ -142,22 +145,22 @@ function ProjecaoPage() {
             <div className="grid gap-4 p-3 xl:grid-cols-[1fr_1fr]">
               <div className="h-72">
                 <ResponsiveContainer>
-                  <BarChart data={sens.map((s) => ({ nome: s.nome, menos: +(s.ptMenos + s.pntMenos).toFixed(3), mais: +(s.ptMais + s.pntMais).toFixed(3) }))} layout="vertical" stackOffset="sign">
+                  <BarChart data={sens.map((s) => ({ nome: t(s.nome), menos: +(s.ptMenos + s.pntMenos).toFixed(3), mais: +(s.ptMais + s.pntMais).toFixed(3) }))} layout="vertical" stackOffset="sign">
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" fontSize={11} />
                     <YAxis type="category" dataKey="nome" width={130} fontSize={11} />
                     <Tooltip />
                     <Legend />
                     <ReferenceLine x={0} stroke="var(--foreground)" />
-                    <Bar dataKey="menos" name="Variável −Δ" fill="var(--chart-1)" stackId="s" />
-                    <Bar dataKey="mais" name="Variável +Δ" fill="var(--chart-2)" stackId="s" />
+                    <Bar dataKey="menos" name={t("Variável −Δ")} fill="var(--chart-1)" stackId="s" />
+                    <Bar dataKey="mais" name={t("Variável +Δ")} fill="var(--chart-2)" stackId="s" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
               <table className="tbl">
                 <thead><tr><th>Variável</th><th>Δ</th><th>PT −/+</th><th>PNT −/+</th></tr></thead>
                 <tbody>{sens.map((s) => (
-                  <tr key={s.nome}><td>{s.nome}</td><td className="font-mono text-xs">{s.delta}</td><td className="font-mono text-xs">{s.ptMenos.toFixed(2)} / {s.ptMais.toFixed(2)}</td><td className="font-mono text-xs">{s.pntMenos.toFixed(2)} / {s.pntMais.toFixed(2)}</td></tr>
+                  <tr key={s.nome}><td>{t(s.nome)}</td><td className="font-mono text-xs">{s.delta}</td><td className="font-mono text-xs">{s.ptMenos.toFixed(2)} / {s.ptMais.toFixed(2)}</td><td className="font-mono text-xs">{s.pntMenos.toFixed(2)} / {s.pntMais.toFixed(2)}</td></tr>
                 ))}</tbody>
               </table>
             </div>
