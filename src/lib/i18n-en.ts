@@ -35,6 +35,7 @@ export const EN_TELAS: Record<string, string> = {
   "A — Balanço Físico Real (Operacional)": "A — Real Physical Balance (Operational)",
   "B — Cálculo Regulatório (PRODIST/ANEEL)": "B — Regulatory Calculation (PRODIST/ANEEL)",
   "Metodologia de Cálculo": "Calculation Methodology", "Metodologia e Cálculo": "Methodology and Calculation",
+  "Guia e Apresentação": "Guide & Presentation",
   "Controle de Medições": "Metering Control", "Alterar Dados de Origem": "Edit Source Data",
   "Definir Áreas de Sub-balanço": "Define Sub-balance Areas", "Inserir % de Perdas Técnicas": "Enter Technical Loss %",
   "Indicadores de Críticas de Dados": "Data Quality Indicators", "Marcar balanço como não-confiável": "Mark balance as unreliable",

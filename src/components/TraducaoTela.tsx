@@ -38,7 +38,7 @@ export function TraducaoTela() {
       if (raiz.nodeType === Node.TEXT_NODE) return texto(raiz as Text);
       if (raiz.nodeType !== Node.ELEMENT_NODE) return;
       const el = raiz as Element;
-      if (el.closest("script,style,.leaflet-tile-pane")) return;
+      if (el.closest("script,style,.leaflet-tile-pane,[data-sem-traducao]")) return;
       elem(el);
       const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
       let n: Node | null = w.nextNode();

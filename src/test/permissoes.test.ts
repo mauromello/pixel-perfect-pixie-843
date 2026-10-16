@@ -19,3 +19,11 @@ describe("controle de acesso por perfil", () => {
     expect(areaDoCaminho("/admin")).toBe("admin");
   });
 });
+
+import { podeAcessar as pa2 } from "@/lib/permissoes";
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+d2("guia", () => {
+  i2("todos os perfis acessam o guia", () => {
+    for (const p of ["admin", "operador", "planejamento", "consulta"] as const) e2(pa2([p], "guia")).toBe(true);
+  });
+});
