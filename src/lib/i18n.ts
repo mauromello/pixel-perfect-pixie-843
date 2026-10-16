@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 export type Idioma = "pt-BR" | "en-US";
 export const IDIOMAS: { id: Idioma; rotulo: string }[] = [
@@ -60,9 +59,19 @@ export function traduzir(idioma: Idioma, texto: string): string {
 }
 
 type S = { idioma: Idioma; setIdioma: (i: Idioma) => void };
-export const useIdioma = create<S>()(
-  persist((set) => ({ idioma: "pt-BR", setIdioma: (idioma) => set({ idioma }) }), { name: "perdazero_idioma" }),
-);
+const CHAVE = "perdazero_idioma";
+function inicial(): Idioma {
+  if (typeof window === "undefined") return "pt-BR";
+  const v = window.localStorage.getItem(CHAVE);
+  return v === "en-US" ? "en-US" : "pt-BR";
+}
+export const useIdioma = create<S>()((set) => ({
+  idioma: inicial(),
+  setIdioma: (idioma) => {
+    if (typeof window !== "undefined") window.localStorage.setItem(CHAVE, idioma);
+    set({ idioma });
+  },
+}));
 
 export function useT() {
   const idioma = useIdioma((s) => s.idioma);
