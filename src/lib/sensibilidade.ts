@@ -20,7 +20,7 @@ export function projetarMes(p: Params, i: number): { pt: number; pnt: number } {
 export const VARIAVEIS: { k: keyof Params; nome: string; delta: number; u: string }[] = [
   { k: "consumo", nome: "Variação de consumo", delta: 10, u: "%" },
   { k: "gd", nome: "Geração Distribuída", delta: 100, u: "MW" },
-  { k: "gc", nome: "Geração Centralizada", delta: 100, u: "MW" },
+  { k: "gc", nome: "Geração Convencional", delta: 100, u: "MW" },
   { k: "fiscal", nome: "Fiscalização", delta: 20, u: "%" },
   { k: "temperatura", nome: "Temperatura média", delta: 2, u: "°C" },
   { k: "tarifa", nome: "Reajuste tarifário", delta: 10, u: "%" },

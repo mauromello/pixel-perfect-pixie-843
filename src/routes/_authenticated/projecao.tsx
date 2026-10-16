@@ -107,7 +107,7 @@ function ProjecaoPage() {
             </div>
             <Slider l="Variação de consumo" v={consumo} set={setConsumo} min={-20} max={20} u="%" />
             <Slider l="Entrada de Geração Distribuída (GD)" v={gd} set={setGd} min={0} max={400} u="MW" />
-            <Slider l="Entrada de Geração Centralizada (GC)" v={gc} set={setGc} min={0} max={300} u="MW" />
+            <Slider l="Entrada de Geração Convencional (GC)" v={gc} set={setGc} min={0} max={300} u="MW" />
             <Slider l="Intensidade de fiscalização" v={fiscal} set={setFiscal} min={0} max={100} u="%" />
             <Slider l="Variação de temperatura média" v={temperatura} set={setTemperatura} min={-5} max={5} u="°C" />
             <Slider l="Reajuste tarifário" v={tarifa} set={setTarifa} min={-10} max={30} u="%" />
