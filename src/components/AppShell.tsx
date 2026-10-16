@@ -2,11 +2,11 @@ import { Link, Outlet } from "@tanstack/react-router";
 import { Activity, BrainCircuit, Map, Scale, Settings, Zap } from "lucide-react";
 
 const itens = [
-  { to: "/", label: "Balanço Energético", icon: Scale },
+  { to: "/", label: "Balanço e Manobras", icon: Scale },
   { to: "/projecao", label: "Projeção e Simulação", icon: Activity },
   { to: "/mapas", label: "Mapas Geoespaciais", icon: Map },
   { to: "/ia", label: "IA, ML e Data Lake", icon: BrainCircuit },
-  { to: "/admin", label: "Administração", icon: Settings },
+  { to: "/admin", label: "Configurações e Segurança", icon: Settings },
 ] as const;
 
 export function AppShell() {
@@ -36,7 +36,7 @@ export function AppShell() {
             </Link>
           ))}
         </nav>
-        <div className="border-t border-sidebar-border p-4 text-[11px] opacity-60">Ciclo de referência: Out/2026</div>
+        <div className="border-t border-sidebar-border p-4 text-[11px] opacity-60">Minas Gerais · Ciclo Out/2026</div>
       </aside>
       <main className="min-w-0 flex-1">
         <Outlet />
