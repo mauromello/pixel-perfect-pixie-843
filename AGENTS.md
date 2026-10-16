@@ -10,3 +10,5 @@
 <!-- LOVABLE:END -->
 
 - Energy-balance business rules live only in `src/lib/calculationEngine.ts` (pure, tested); UI reads network data from the zustand store in `src/lib/network-store.ts` so edits propagate across screens.
+- The network model is CIM-shaped (Subestacao → Alimentador → Segmento/Trafo → Cliente, plus `chaves`) and is the single source for map, switching and balance; switching must go through `manobrar()` in the engine so topology validation stays in one place.
+- BDGD (ANEEL) GeoJSON import and CIM-XML/GeoJSON export live in `src/lib/bdgd.ts` (pure, tested) so file formats stay decoupled from the store.
