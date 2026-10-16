@@ -55,42 +55,7 @@ function AdminPage() {
           </table>
         </div>
 
-        <div className="panel overflow-auto xl:col-span-2">
-          <div className="panel-h">
-            <span className="flex items-center gap-2"><Users size={14} /> Utilizadores — Active Directory (corp.energiamg.local)</span>
-            <span className="flex items-center gap-2 text-xs font-normal text-muted-foreground">
-              Última sincronização LDAP: {sync}
-              <button className="btn text-xs" onClick={() => setSync(new Date().toLocaleString("pt-BR"))}><RefreshCw size={12} /> Sincronizar AD</button>
-            </span>
-          </div>
-          <div className="p-3"><input className="inp w-72" placeholder="Filtrar por nome, login ou OU…" value={filtro} onChange={(e) => setFiltro(e.target.value)} /></div>
-          <table className="tbl">
-            <thead><tr><th>Login (sAMAccountName)</th><th>Nome</th><th>Unidade Organizacional</th><th>Perfil</th><th>Último acesso</th><th>Estado</th></tr></thead>
-            <tbody>{lista.map((u) => {
-              const upd = (p: Partial<typeof u>) => setUsuarios(usuarios.map((x) => (x.login === u.login ? { ...x, ...p } : x)));
-              return (
-                <tr key={u.login}>
-                  <td className="font-mono">{u.login}</td><td>{u.nome}</td><td className="font-mono text-xs">{u.ou}</td>
-                  <td><select className="inp" value={u.perfil} onChange={(e) => upd({ perfil: e.target.value })}>{perfis.map((p) => <option key={p.perfil}>{p.perfil}</option>)}</select></td>
-                  <td className="text-xs">{u.ultimo}</td>
-                  <td><button className={`badge ${u.ativo ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`} onClick={() => upd({ ativo: !u.ativo })}>{u.ativo ? "Ativo" : "Bloqueado"}</button></td>
-                </tr>
-              );
-            })}</tbody>
-          </table>
-        </div>
-
-        <div className="panel overflow-auto xl:col-span-2">
-          <div className="panel-h"><span className="flex items-center gap-2"><ShieldCheck size={14} /> Perfis de Acesso</span><span className="text-xs font-normal text-muted-foreground">SSO via AD · MFA obrigatório · trilha de auditoria ativa</span></div>
-          <table className="tbl">
-            <thead><tr><th>Perfil</th><th>Grupo AD</th><th>Utilizadores</th><th>Balanço</th><th>Projeção</th><th>Mapas</th><th>IA / Data Lake</th><th>Administração</th></tr></thead>
-            <tbody>{perfis.map((p) => (
-              <tr key={p.perfil}><td className="font-medium">{p.perfil}</td><td className="font-mono text-xs">{p.grupoAD}</td><td className="font-mono">{usuarios.filter((u) => u.perfil === p.perfil).length + p.usuarios - usuariosAD.filter((u) => u.perfil === p.perfil).length}</td>
-                {[p.balanco, p.projecao, p.mapas, p.ia, p.admin].map((v, i) => <td key={i}><span className={`badge ${permCls(v)}`}>{v}</span></td>)}
-              </tr>
-            ))}</tbody>
-          </table>
-        </div>
+        <GestaoUsuarios />
       </div>
     </div>
   );
