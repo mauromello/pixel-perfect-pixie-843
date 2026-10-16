@@ -165,5 +165,5 @@
   .tbl th { @apply border-b border-border bg-muted px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground; }
   .tbl td { @apply border-b border-border px-3 py-2; }
   .badge { @apply inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium; }
-  .kpi { @apply font-mono text-2xl font-semibold tabular-nums; }
+  .kpi { @apply font-mono text-xl font-semibold tabular-nums; }
 }
