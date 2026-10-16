@@ -7,7 +7,7 @@ import { useIdioma } from "@/lib/i18n";
 type Modo = "ambos" | "uso" | "tecnico";
 
 export const Route = createFileRoute("/_authenticated/guia")({
-  validateSearch: (s: Record<string, unknown>) => ({ s: Math.max(0, Math.min(SLIDES.length - 1, Number(s.s) || 0)) }),
+  validateSearch: (s: Record<string, unknown>) => ({ s: Math.max(0, Math.min(SLIDES.length - 1, Number(s["s"]) || 0)) }),
   head: () => ({
     meta: [
       { title: "Guide & Presentation — PerdaZero" },
@@ -31,7 +31,7 @@ function GuiaPage() {
   const ref = useRef<HTMLDivElement>(null);
   const toque = useRef<number | null>(null);
   const ir = (i: number) => navigate({ search: { s: Math.max(0, Math.min(SLIDES.length - 1, i)) }, replace: true });
-  const slide = SLIDES[s];
+  const slide = SLIDES[s] ?? SLIDES[0]!;
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -77,10 +77,10 @@ function GuiaPage() {
         <div
           ref={ref}
           className="relative min-w-0 flex-1 overflow-y-auto bg-background"
-          onTouchStart={(e) => (toque.current = e.touches[0].clientX)}
+          onTouchStart={(e) => (toque.current = e.touches[0]?.clientX ?? 0)}
           onTouchEnd={(e) => {
             if (toque.current == null) return;
-            const dx = e.changedTouches[0].clientX - toque.current;
+            const dx = (e.changedTouches[0]?.clientX ?? 0) - toque.current;
             if (Math.abs(dx) > 50) ir(s + (dx < 0 ? 1 : -1));
             toque.current = null;
           }}
