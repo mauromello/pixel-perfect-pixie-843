@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
 import { dicionario } from "@/lib/mock-data";
 import { GestaoUsuarios } from "@/components/GestaoUsuarios";
+import { ControleLogin } from "@/components/ControleLogin";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -49,6 +50,7 @@ function AdminPage() {
           </table>
         </div>
 
+        <ControleLogin />
         <GestaoUsuarios />
       </div>
     </div>
