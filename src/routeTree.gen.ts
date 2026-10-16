@@ -15,6 +15,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedIaRouteImport } from './routes/_authenticated/ia'
 import { Route as AuthenticatedMapasRouteImport } from './routes/_authenticated/mapas'
+import { Route as AuthenticatedMetodologiaRouteImport } from './routes/_authenticated/metodologia'
 import { Route as AuthenticatedProjecaoRouteImport } from './routes/_authenticated/projecao'
 import { Route as AuthenticatedRedeRouteImport } from './routes/_authenticated/rede'
 
@@ -47,6 +48,12 @@ const AuthenticatedMapasRoute = AuthenticatedMapasRouteImport.update({
   path: '/mapas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMetodologiaRoute =
+  AuthenticatedMetodologiaRouteImport.update({
+    id: '/metodologia',
+    path: '/metodologia',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProjecaoRoute = AuthenticatedProjecaoRouteImport.update({
   id: '/projecao',
   path: '/projecao',
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/ia': typeof AuthenticatedIaRoute
   '/mapas': typeof AuthenticatedMapasRoute
+  '/metodologia': typeof AuthenticatedMetodologiaRoute
   '/projecao': typeof AuthenticatedProjecaoRoute
   '/rede': typeof AuthenticatedRedeRoute
 }
@@ -72,6 +80,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/ia': typeof AuthenticatedIaRoute
   '/mapas': typeof AuthenticatedMapasRoute
+  '/metodologia': typeof AuthenticatedMetodologiaRoute
   '/projecao': typeof AuthenticatedProjecaoRoute
   '/rede': typeof AuthenticatedRedeRoute
   '/': typeof AuthenticatedIndexRoute
@@ -83,6 +92,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/ia': typeof AuthenticatedIaRoute
   '/_authenticated/mapas': typeof AuthenticatedMapasRoute
+  '/_authenticated/metodologia': typeof AuthenticatedMetodologiaRoute
   '/_authenticated/projecao': typeof AuthenticatedProjecaoRoute
   '/_authenticated/rede': typeof AuthenticatedRedeRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -90,9 +100,24 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/login' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede'
+    | '/'
+    | '/login'
+    | '/admin'
+    | '/ia'
+    | '/mapas'
+    | '/metodologia'
+    | '/projecao'
+    | '/rede'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede' | '/'
+  to:
+    | '/login'
+    | '/admin'
+    | '/ia'
+    | '/mapas'
+    | '/metodologia'
+    | '/projecao'
+    | '/rede'
+    | '/'
   id:
     | '__root__'
     | '/_authenticated'
@@ -100,6 +125,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/ia'
     | '/_authenticated/mapas'
+    | '/_authenticated/metodologia'
     | '/_authenticated/projecao'
     | '/_authenticated/rede'
     | '/_authenticated/'
@@ -154,6 +180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMapasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/metodologia': {
+      id: '/_authenticated/metodologia'
+      path: '/metodologia'
+      fullPath: '/metodologia'
+      preLoaderRoute: typeof AuthenticatedMetodologiaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/projecao': {
       id: '/_authenticated/projecao'
       path: '/projecao'
@@ -175,6 +208,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedIaRoute: typeof AuthenticatedIaRoute
   AuthenticatedMapasRoute: typeof AuthenticatedMapasRoute
+  AuthenticatedMetodologiaRoute: typeof AuthenticatedMetodologiaRoute
   AuthenticatedProjecaoRoute: typeof AuthenticatedProjecaoRoute
   AuthenticatedRedeRoute: typeof AuthenticatedRedeRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -184,6 +218,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedIaRoute: AuthenticatedIaRoute,
   AuthenticatedMapasRoute: AuthenticatedMapasRoute,
+  AuthenticatedMetodologiaRoute: AuthenticatedMetodologiaRoute,
   AuthenticatedProjecaoRoute: AuthenticatedProjecaoRoute,
   AuthenticatedRedeRoute: AuthenticatedRedeRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
