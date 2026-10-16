@@ -34,7 +34,7 @@ function Num({ label, value, onChange, unit }: { label: string; value: number; o
 
 function RedePage() {
   const st = useRede();
-  const [sel, setSel] = useState<Sel>({ tipo: "al", id: st.subestacoes[0].alimentadores[0].id });
+  const [sel, setSel] = useState<Sel>({ tipo: "al", id: st.subestacoes[0]?.alimentadores[0]?.id ?? "" });
   const [novo, setNovo] = useState({ nome: "", tipo: "gd" as TipoCliente, importacao: 10, exportacao: 50, trId: "" });
 
   const se = st.subestacoes.find((s) => s.id === sel.id || s.alimentadores.some((a) => a.id === sel.id || a.trafos.some((t) => t.id === sel.id)))!;
@@ -121,7 +121,8 @@ function RedePage() {
                       <td><input className="inp w-24 font-mono" type="number" value={novo.importacao} onChange={(e) => setNovo({ ...novo, importacao: Number(e.target.value) })} /></td>
                       <td><input className="inp w-24 font-mono" type="number" disabled={novo.tipo !== "gd"} value={novo.tipo === "gd" ? novo.exportacao : 0} onChange={(e) => setNovo({ ...novo, exportacao: Number(e.target.value) })} /></td>
                       <td><button className="btn-primary text-xs" onClick={() => {
-                        const trId = novo.trId && al.trafos.some((t) => t.id === novo.trId) ? novo.trId : al.trafos[0].id;
+                        const trId = novo.trId && al.trafos.some((t) => t.id === novo.trId) ? novo.trId : al.trafos[0]?.id;
+                        if (!trId) return;
                         st.addCliente(trId, { nome: novo.nome || `${tipoLabel[novo.tipo]} novo`, tipo: novo.tipo, importacao: novo.importacao, exportacao: novo.tipo === "gd" ? novo.exportacao : 0 });
                         setNovo({ ...novo, nome: "" });
                       }}><Plus size={13} /> Adicionar</button></td>

@@ -34,7 +34,7 @@ export function GraficoAlimentador({ se, al }: { se: Subestacao; al: Alimentador
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="nome" fontSize={10} interval={0} />
             <YAxis fontSize={11} />
-            <Tooltip formatter={(v: number) => `${f1(v)} MWh`} />
+            <Tooltip formatter={(v) => `${f1(Number(v))} MWh`} />
             <Legend />
             <Bar dataKey="v" name="MWh" fill="var(--chart-1)" />
           </BarChart>
