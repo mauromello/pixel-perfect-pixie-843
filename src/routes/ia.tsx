@@ -11,19 +11,21 @@ export const Route = createFileRoute("/ia")({
       { name: "description", content: "Saúde dos dados e algoritmos: fontes integradas, performance do repositório e logs do motor de IA." },
       { property: "og:title", content: "IA, ML e Data Lake — PerdaZero" },
       { property: "og:description", content: "Monitoramento de integração de dados e do motor de inteligência artificial." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: IaPage,
 });
 
 const eventos = [
-  ["Detecção de Anomalias", "Balanço", "Desvio de 3,2σ no AL-02 Barão — inspeção sugerida"],
-  ["Otimização de Processos", "Projeção", "Modelo XGBoost re-treinado — MAPE 4,1% → 3,6%"],
-  ["Detecção de Anomalias", "Mapas", "Cluster de PNT identificado em Campinas (14 UCs)"],
-  ["Otimização de Processos", "Balanço", "Imputação automática de 4h de curva SCADA na SE Taquaral"],
-  ["Detecção de Anomalias", "Medição", "MD-88013 com padrão de consumo compatível com by-pass"],
-  ["Otimização de Processos", "Data Lake", "Particionamento ajustado — consultas 28% mais rápidas"],
-  ["Detecção de Anomalias", "GD/GC", "Injeção GD acima da potência instalada em UC 3002"],
+  ["Detecção de Anomalias de Carga", "TAQ-AL02 · BH", "Desvio de 3,2σ na curva de carga noturna"],
+  ["Seleção de Alvos de Inspeção", "Uberlândia", "14 UCs priorizadas (score > 0,82) no bairro Santa Mônica"],
+  ["Detecção de Anomalias de Carga", "JUI-AL02 · Juiz de Fora", "Faturado acima do injetado — possível manobra não registada"],
+  ["Seleção de Alvos de Inspeção", "Montes Claros", "Ordem de inspeção gerada: 9 alvos com suspeita de by-pass"],
+  ["Detecção de Anomalias de Carga", "MD-88034 · Varginha", "Consumo zerado com temperatura 31 °C (INMET)"],
+  ["Seleção de Alvos de Inspeção", "BH · SE Neves", "Cluster de ligações clandestinas (22 pontos) — enviado ao campo"],
+  ["Detecção de Anomalias de Carga", "UBE-AL01 · Uberlândia", "Injeção GD acima da potência instalada em UC 3011"],
 ];
 
 const spark = (s: number) => Array.from({ length: 20 }, (_, i) => ({ v: 50 + Math.sin(i / 2 + s) * 20 + ((i * s) % 10) }));
@@ -63,13 +65,14 @@ function IaPage() {
         </div>
         <div className="grid gap-4 xl:grid-cols-[1fr_440px]">
           <div className="panel overflow-auto">
-            <div className="panel-h">Fontes de Dados Integradas</div>
+            <div className="panel-h">Saúde da Fonte Única de Dados</div>
             <table className="tbl">
-              <thead><tr><th>Categoria</th><th>Origem</th><th>Status</th><th>Volume processado</th><th>Latência</th></tr></thead>
+              <thead><tr><th>Fonte</th><th>Origem</th><th>Status</th><th>Volume</th><th>Última sincronização</th><th>Sincronização</th></tr></thead>
               <tbody>{fontesDados.map((f) => (
                 <tr key={f.cat}><td className="font-medium">{f.cat}</td><td>{f.origem}</td>
-                  <td><span className={`badge ${f.status === "Online" ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>● {f.status}</span></td>
-                  <td className="font-mono">{f.volume}</td><td className="font-mono">{f.latencia}</td></tr>
+                  <td><span className={`badge ${f.status === "Sincronizado" ? "bg-success/15 text-success" : f.status === "Falha" ? "bg-destructive/15 text-destructive" : "bg-warning/25 text-accent-foreground"}`}>● {f.status}</span></td>
+                  <td className="font-mono">{f.volume}</td><td className="text-xs">{f.ultima}</td>
+                  <td><div className="h-1.5 w-24 rounded bg-muted"><div className={`h-1.5 rounded ${f.sync === 100 ? "bg-success" : f.sync < 50 ? "bg-destructive" : "bg-warning"}`} style={{ width: `${f.sync}%` }} /></div></td></tr>
               ))}</tbody>
             </table>
           </div>

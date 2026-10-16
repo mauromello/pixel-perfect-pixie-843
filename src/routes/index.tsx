@@ -3,15 +3,18 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PageHeader } from "@/components/AppShell";
+import { Manobras } from "@/components/Manobras";
 import { arvore, balanco, criticas, fontesBalanco, type Node } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Balanço Energético — PerdaZero" },
+      { title: "Balanço Energético e Manobras — PerdaZero" },
       { name: "description", content: "Cálculo e gestão do balanço energético por elemento da rede de distribuição." },
-      { property: "og:title", content: "Balanço Energético — PerdaZero" },
-      { property: "og:description", content: "Cálculo e gestão do balanço energético por elemento da rede." },
+      { property: "og:title", content: "Balanço Energético e Manobras — PerdaZero" },
+      { property: "og:description", content: "Balanço energético e simulação de manobras na rede de Minas Gerais." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: BalancoPage,
@@ -115,6 +118,8 @@ function BalancoPage() {
             </div>
           </div>
 
+          <Manobras />
+
           <div className="panel overflow-auto">
             <div className="panel-h">Indicadores de Críticas de Dados</div>
             <table className="tbl">
@@ -126,7 +131,7 @@ function BalancoPage() {
           </div>
 
           <div className="panel overflow-auto">
-            <div className="panel-h">Alterar dados de sistemas de origem</div>
+            <div className="panel-h">Alterar Dados de Origem</div>
             <table className="tbl">
               <thead><tr><th>Elemento</th><th>Sistema</th><th>Injetada (MWh)</th><th>Faturada (MWh)</th><th>Status</th><th></th></tr></thead>
               <tbody>{linhas.map((l, i) => {
