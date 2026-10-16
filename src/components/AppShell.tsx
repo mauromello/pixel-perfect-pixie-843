@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Activity, BrainCircuit, LogOut, Map, Network, Scale, Settings, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nomePerfil, podeAcessar, type Area } from "@/lib/permissoes";
+import { IDIOMAS, useIdioma, useT } from "@/lib/i18n";
 
 const itens = [
   { to: "/", label: "Balanço e Manobras", icon: Scale, area: "balanco" },
@@ -19,6 +20,8 @@ export function AppShell() {
   const { sessao } = rotaAuth.useRouteContext();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const t = useT();
+  const { idioma, setIdioma } = useIdioma();
 
   async function sair() {
     await qc.cancelQueries();
@@ -36,7 +39,7 @@ export function AppShell() {
           </div>
           <div>
             <div className="text-sm font-semibold text-sidebar-accent-foreground">PerdaZero</div>
-            <div className="text-[11px] opacity-70">Combate a Perdas</div>
+            <div className="text-[11px] opacity-70">{t("Combate a Perdas")}</div>
           </div>
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 p-2">
@@ -49,16 +52,23 @@ export function AppShell() {
               activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-sidebar-primary" }}
             >
               <Icon size={16} />
-              {label}
+              {t(label)}
             </Link>
           ))}
         </nav>
         <div className="border-t border-sidebar-border p-3 text-xs">
           <div className="truncate font-medium text-sidebar-accent-foreground">{sessao.nome}</div>
-          <div className="truncate opacity-70">{sessao.perfis.map(nomePerfil).join(", ") || "Sem perfil"}</div>
+          <div className="truncate opacity-70">{sessao.perfis.map((p) => t(nomePerfil(p))).join(", ") || t("Sem perfil")}</div>
           <button className="mt-2 flex items-center gap-1.5 rounded px-2 py-1 hover:bg-sidebar-accent" onClick={sair}>
-            <LogOut size={13} /> Sair
+            <LogOut size={13} /> {t("Sair")}
           </button>
+          <div className="mt-2 flex items-center gap-1" aria-label={t("Idioma")}>
+            {IDIOMAS.map((i) => (
+              <button key={i.id} onClick={() => setIdioma(i.id)} className={`rounded px-2 py-0.5 text-[11px] ${idioma === i.id ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"}`}>
+                {i.rotulo}
+              </button>
+            ))}
+          </div>
         </div>
       </aside>
       <main className="min-w-0 flex-1">
@@ -69,11 +79,12 @@ export function AppShell() {
 }
 
 export function PageHeader({ title, subtitle, children }: { title: string; subtitle: string; children?: React.ReactNode }) {
+  const t = useT();
   return (
     <header className="flex flex-wrap items-end justify-between gap-3 border-b border-border bg-card px-6 py-4">
       <div>
-        <h1 className="text-xl font-semibold">{title}</h1>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
+        <h1 className="text-xl font-semibold">{t(title)}</h1>
+        <p className="text-sm text-muted-foreground">{t(subtitle)}</p>
       </div>
       <div className="flex gap-2">{children}</div>
     </header>
