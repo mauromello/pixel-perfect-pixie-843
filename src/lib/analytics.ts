@@ -9,14 +9,14 @@ export type Alvo = IndicadorTrafo & { score: number; tipologia: Tipologia; acao:
 
 const lim = (x: number) => Math.max(0, Math.min(1, x));
 
-/** Score 0..1 = 0,5·fraude/30 + 0,3·clandestinas/15 + 0,2·inadimplência/16. */
+/** Score 0..1 = 0,5·fraude/10 + 0,3·clandestinas/6 + 0,2·inadimplência/16. */
 export function scoreAlvo(i: IndicadorTrafo): number {
-  return lim(0.5 * (i.fraude / 30) + 0.3 * (i.clandestina / 15) + 0.2 * (i.inadimplencia / 16));
+  return lim(0.5 * (i.fraude / 10) + 0.3 * (i.clandestina / 6) + 0.2 * (i.inadimplencia / 16));
 }
 
 export function classificar(i: IndicadorTrafo): Alvo {
   const score = scoreAlvo(i);
-  const comp = { fraude: i.fraude / 30, clandestina: i.clandestina / 15, inad: i.inadimplencia / 16, imp: i.impedimento / 12 };
+  const comp = { fraude: i.fraude / 10, clandestina: i.clandestina / 6, inad: i.inadimplencia / 16, imp: i.impedimento / 12 };
   const top = (Object.entries(comp) as [keyof typeof comp, number][]).sort((a, b) => b[1] - a[1])[0]![0];
   const tipologia: Tipologia = top === "fraude" ? "By-pass / desvio" : top === "clandestina" ? "Ligação clandestina" : top === "imp" ? "Medidor travado" : "Inadimplência recorrente";
   const acao: Acao = tipologia === "Ligação clandestina" ? "Blindagem de rede (BTzero)" : tipologia === "Medidor travado" ? "Troca por medição AMI" : tipologia === "Inadimplência recorrente" ? "Ação comercial" : "Inspeção em campo";
@@ -61,6 +61,6 @@ export function curvaCarga(chave: string, base: number) {
     const ruido = (semente(chave + h) - 0.5) * 2 * sigma * 1.5;
     const pico = semente(chave + "a" + h) > 0.9 ? (semente(chave + "s" + h) > 0.5 ? 1 : -1) * sigma * 3.5 : 0;
     const real = prev + ruido + pico;
-    return { h: `${String(h).padStart(2, "0")}h`, prev, real, b2: [prev - 2 * sigma, prev + 2 * sigma] as [number, number], b3: [prev - 3 * sigma, prev + 3 * sigma] as [number, number], anomalia: Math.abs(real - prev) > 2 * sigma };
+    return { h: `${String(h).padStart(2, "0")}h`, prev, real, b2: [prev - 2 * sigma, prev + 2 * sigma] as [number, number], b3: [prev - 3 * sigma, prev + 3 * sigma] as [number, number], anomalia: Math.abs(real - prev) > 2 * sigma, anom: Math.abs(real - prev) > 2 * sigma ? real : null };
   });
 }

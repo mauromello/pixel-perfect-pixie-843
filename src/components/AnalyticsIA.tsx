@@ -88,14 +88,14 @@ export function AnalyticsIA() {
           <ResponsiveContainer>
             <ComposedChart data={curva}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="h" fontSize={11} /><YAxis fontSize={11} unit=" MW" />
+              <XAxis dataKey="h" fontSize={11} allowDuplicatedCategory={false} /><YAxis fontSize={11} unit=" MW" />
               <Tooltip formatter={(v) => (Array.isArray(v) ? v.map((x) => fmt(+x, 2)).join(" – ") : fmt(+(v as number), 2))} />
               <Legend />
               <Area dataKey="b3" name="Banda ±3σ" stroke="none" fill="var(--chart-4)" fillOpacity={0.12} />
               <Area dataKey="b2" name="Banda ±2σ" stroke="none" fill="var(--chart-1)" fillOpacity={0.2} />
               <Line dataKey="prev" name="Prevista" stroke="var(--chart-1)" dot={false} strokeDasharray="4 3" />
               <Line dataKey="real" name="Real" stroke="var(--chart-2)" dot={false} />
-              <Scatter data={anomalias} dataKey="real" name="Anomalia" fill="var(--destructive)" />
+              <Scatter dataKey="anom" name="Anomalia" fill="var(--destructive)" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
@@ -108,11 +108,11 @@ export function AnalyticsIA() {
             <ResponsiveContainer>
               <BarChart data={efic.slice(0, 10)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="grupo" fontSize={10} interval={0} angle={-25} textAnchor="end" height={60} /><YAxis fontSize={11} />
+                <XAxis dataKey="grupo" fontSize={10} interval={0} angle={-25} textAnchor="end" height={60} /><YAxis yAxisId="n" fontSize={11} /><YAxis yAxisId="m" orientation="right" fontSize={11} unit=" MWh" />
                 <Tooltip formatter={(v) => fmt(+(v as number))} /><Legend />
-                <Bar dataKey="inspecoes" name="Inspeções" fill="var(--chart-1)" />
-                <Bar dataKey="confirmadas" name="Confirmadas" fill="var(--chart-2)" />
-                <Bar dataKey="mwh" name="MWh recuperado" fill="var(--chart-3)" />
+                <Bar yAxisId="n" dataKey="inspecoes" name="Inspeções" fill="var(--chart-1)" />
+                <Bar yAxisId="n" dataKey="confirmadas" name="Confirmadas" fill="var(--chart-2)" />
+                <Bar yAxisId="m" dataKey="mwh" name="MWh recuperado" fill="var(--chart-3)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
