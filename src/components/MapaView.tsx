@@ -1,11 +1,12 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import L from "leaflet";
 import { CircleMarker, MapContainer, Marker, Polygon, Polyline, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
-import { BookOpen, ChevronDown, Layers, PenTool, Search, X } from "lucide-react";
+import { BookOpen, ChevronDown, Flame, Layers, PenTool, Search, X } from "lucide-react";
 import { balancoAlimentador, perdasPorNivel, type Coord } from "@/lib/calculationEngine";
 import { useRede } from "@/lib/network-store";
 import { alertaRegulatorio, carregamentoTrafo, sobrecargaAlimentador, trechosDesenergizados } from "@/lib/estadoRede";
 import { COS, rotacao, svgDisjuntor, svgFusivel, svgSeccionadora, svgSubestacao, svgTrafo } from "@/lib/simbologia";
+import { areasCriticas, areasRisco, COR_TEC, indicadoresTrafos, TECNOLOGIAS, TEMAS, type TemaId } from "@/lib/tematicos";
 
 const fmt = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 const COR_ABERTA = COS.fechado, COR_SE = COS.se;
@@ -60,6 +61,14 @@ function Desenho({ ativo, onPonto }: { ativo: boolean; onPonto: (p: [number, num
 export default function MapaView() {
   const { subestacoes, chaves, origemModelo } = useRede();
   const [ativas, setAtivas] = useState<Record<string, boolean>>({ at: true, mt: true, bt: true, ch: true });
+  const [tema, setTema] = useState<TemaId | "">("");
+  const [risco, setRisco] = useState(false);
+  const [tecs, setTecs] = useState<Record<string, boolean>>({});
+  const indicadores = useMemo(() => subestacoes.flatMap((s) => s.alimentadores.flatMap(indicadoresTrafos)), [subestacoes]);
+  const riscos = useMemo(() => areasRisco(subestacoes), [subestacoes]);
+  const temaInfo = TEMAS.find((t) => t.id === tema);
+  const maxTema = tema ? Math.max(1e-9, ...indicadores.map((i) => i[tema])) : 1;
+  const criticas = tema ? areasCriticas(indicadores, tema) : [];
   const [tipo, setTipo] = useState("Alimentador");
   const [q, setQ] = useState("");
   const [alvo, setAlvo] = useState<[number, number] | null>(null);
@@ -115,6 +124,23 @@ export default function MapaView() {
         <Ajustar pts={todosPts} />
         <FlyTo pos={alvo} />
         <Desenho ativo={desenhando} onPonto={(p) => setPoly((v) => [...v, p])} />
+
+        {risco && riscos.map((r) => (
+          <Polygon key={r.nome} positions={r.poly} pathOptions={{ color: COS.sobrecarga, weight: 2, dashArray: "6 4", fillOpacity: 0.12 }}><Popup>{r.nome}</Popup></Polygon>
+        ))}
+        {temaInfo && indicadores.map((i) => {
+          const v = i[temaInfo.id] / maxTema;
+          return (
+            <CircleMarker key={"tm" + i.id} center={[i.lat, i.lng]} radius={8 + v * 28} pathOptions={{ color: temaInfo.cor, fillColor: temaInfo.cor, fillOpacity: 0.15 + v * 0.45, weight: 1 }}>
+              <Popup><b>{i.nome}</b> ({i.alimentador})<br />{temaInfo.nome}: {fmt(i[temaInfo.id])} {temaInfo.unidade}<br />PT {fmt(i.pt)} MWh · PNT {fmt(i.pnt)} MWh<br />Inadimplência {fmt(i.inadimplencia)}% · Fraudes {i.fraude} · Clandestinas {i.clandestina}<br />Impedimento de leitura {fmt(i.impedimento)}% · Clientes {i.clientes}</Popup>
+            </CircleMarker>
+          );
+        })}
+        {indicadores.filter((i) => i.tecnologia && tecs[i.tecnologia]).map((i) => (
+          <CircleMarker key={"tc" + i.id} center={[i.lat + 0.0025, i.lng + 0.0025]} radius={6} pathOptions={{ color: "#fff", weight: 2, fillColor: COR_TEC[i.tecnologia!], fillOpacity: 1 }}>
+            <Popup><b>{i.tecnologia}</b> instalado em {i.nome} ({i.alimentador})</Popup>
+          </CircleMarker>
+        ))}
 
         {ativas["mt"] && feeders.map(({ a, s }) => {
           const b = balancoAlimentador(a);
@@ -201,6 +227,34 @@ export default function MapaView() {
                 <div key={a.id} className="flex items-center gap-2 text-xs"><span className="h-1.5 w-5 rounded" style={{ background: a.cor }} />{a.cod}<span className="ml-auto font-mono text-muted-foreground">{a.tensaoKV} kV</span></div>
               ))}
             </div>
+          </div>
+        </div>
+        <div className="panel">
+          <div className="panel-h"><span className="flex items-center gap-2"><Flame size={14} /> Mapas Temáticos</span></div>
+          <div className="space-y-2 p-3 text-sm">
+            <select className="inp w-full" aria-label="Tema" value={tema} onChange={(e) => setTema(e.target.value as TemaId | "")}>
+              <option value="">— Sem tema —</option>
+              {TEMAS.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+            </select>
+            <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={risco} onChange={(e) => setRisco(e.target.checked)} /><span className="h-3 w-3 rounded-sm border-2 border-dashed" style={{ borderColor: COS.sobrecarga }} />Áreas de risco</label>
+            <div className="text-xs text-muted-foreground">Tecnologias de combate a perdas:</div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
+              {TECNOLOGIAS.map((t) => (
+                <label key={t} className="flex cursor-pointer items-center gap-1 text-xs"><input type="checkbox" checked={!!tecs[t]} onChange={(e) => setTecs({ ...tecs, [t]: e.target.checked })} /><span className="h-2.5 w-2.5 rounded-full" style={{ background: COR_TEC[t] }} />{t}</label>
+              ))}
+            </div>
+            {temaInfo && (
+              <div className="border-t border-border pt-2">
+                <div className="mb-1 text-xs font-semibold">Áreas críticas — {temaInfo.nome}</div>
+                {criticas.map((c) => (
+                  <button key={c.id} className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-muted" onClick={() => setAlvo([c.lat, c.lng])}>
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: temaInfo.cor }} />{c.nome}<span className="text-muted-foreground">{c.alimentador}</span>
+                    <span className="ml-auto font-mono">{fmt(c[temaInfo.id])} {temaInfo.unidade}</span>
+                  </button>
+                ))}
+                <p className="pt-1 text-[11px] text-muted-foreground">PT/PNT calculadas do modelo de rede; indicadores comerciais simulados até integração CCS/SAP.</p>
+              </div>
+            )}
           </div>
         </div>
         <div className="panel">
