@@ -53,7 +53,7 @@ function ProjecaoPage() {
     return out;
   }, [elemento, horizonte, consumo, gd, gc, fiscal]);
   const ult = dados[dados.length - 1]!;
-  const ptF = Number(ult.ptProj ?? 0), pntF = Number(ult.pntProj ?? 0);
+  const ptF = Number(ult["ptProj"] ?? 0), pntF = Number(ult["pntProj"] ?? 0);
 
   const exportar = (lista: Sim[]) => {
     const cab = "data;elemento;horizonte_meses;variacao_consumo_pct;gd_mw;gc_mw;fiscalizacao_pct;pt_final_pct;pnt_final_pct";
