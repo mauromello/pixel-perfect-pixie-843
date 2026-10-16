@@ -51,8 +51,6 @@ export function TraducaoTela() {
       }
     }
 
-    varrer(document.body);
-    if (document.title) document.title = traduzir(idioma, document.title);
     const obs = new MutationObserver((ms) => {
       for (const m of ms) {
         if (m.type === "characterData") texto(m.target as Text);
@@ -60,9 +58,15 @@ export function TraducaoTela() {
         else m.addedNodes.forEach(varrer);
       }
     });
-    obs.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS] });
+    // Start after React finished hydrating, otherwise server/client text would differ.
+    const iniciar = setTimeout(() => {
+      varrer(document.body);
+      if (document.title) document.title = traduzir(idioma, document.title);
+      obs.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS] });
+    }, 400);
     document.documentElement.lang = idioma;
     return () => {
+      clearTimeout(iniciar);
       obs.disconnect();
       // Restore Portuguese originals so the next language starts from them.
       const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
