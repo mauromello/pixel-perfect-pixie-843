@@ -9,140 +9,192 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as IaRouteImport } from './routes/ia'
-import { Route as MapasRouteImport } from './routes/mapas'
-import { Route as ProjecaoRouteImport } from './routes/projecao'
-import { Route as RedeRouteImport } from './routes/rede'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedIaRouteImport } from './routes/_authenticated/ia'
+import { Route as AuthenticatedMapasRouteImport } from './routes/_authenticated/mapas'
+import { Route as AuthenticatedProjecaoRouteImport } from './routes/_authenticated/projecao'
+import { Route as AuthenticatedRedeRouteImport } from './routes/_authenticated/rede'
 
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AdminRoute = AdminRouteImport.update({
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const IaRoute = IaRouteImport.update({
+const AuthenticatedIaRoute = AuthenticatedIaRouteImport.update({
   id: '/ia',
   path: '/ia',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const MapasRoute = MapasRouteImport.update({
+const AuthenticatedMapasRoute = AuthenticatedMapasRouteImport.update({
   id: '/mapas',
   path: '/mapas',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ProjecaoRoute = ProjecaoRouteImport.update({
+const AuthenticatedProjecaoRoute = AuthenticatedProjecaoRouteImport.update({
   id: '/projecao',
   path: '/projecao',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const RedeRoute = RedeRouteImport.update({
+const AuthenticatedRedeRoute = AuthenticatedRedeRouteImport.update({
   id: '/rede',
   path: '/rede',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/ia': typeof IaRoute
-  '/mapas': typeof MapasRoute
-  '/projecao': typeof ProjecaoRoute
-  '/rede': typeof RedeRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/login': typeof LoginRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/ia': typeof AuthenticatedIaRoute
+  '/mapas': typeof AuthenticatedMapasRoute
+  '/projecao': typeof AuthenticatedProjecaoRoute
+  '/rede': typeof AuthenticatedRedeRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/ia': typeof IaRoute
-  '/mapas': typeof MapasRoute
-  '/projecao': typeof ProjecaoRoute
-  '/rede': typeof RedeRoute
+  '/login': typeof LoginRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/ia': typeof AuthenticatedIaRoute
+  '/mapas': typeof AuthenticatedMapasRoute
+  '/projecao': typeof AuthenticatedProjecaoRoute
+  '/rede': typeof AuthenticatedRedeRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/ia': typeof IaRoute
-  '/mapas': typeof MapasRoute
-  '/projecao': typeof ProjecaoRoute
-  '/rede': typeof RedeRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/ia': typeof AuthenticatedIaRoute
+  '/_authenticated/mapas': typeof AuthenticatedMapasRoute
+  '/_authenticated/projecao': typeof AuthenticatedProjecaoRoute
+  '/_authenticated/rede': typeof AuthenticatedRedeRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede'
+  fullPaths:
+    '/' | '/login' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede'
-  id: '__root__' | '/' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede'
+  to: '/login' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede' | '/'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/login'
+    | '/_authenticated/admin'
+    | '/_authenticated/ia'
+    | '/_authenticated/mapas'
+    | '/_authenticated/projecao'
+    | '/_authenticated/rede'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
-  IaRoute: typeof IaRoute
-  MapasRoute: typeof MapasRoute
-  ProjecaoRoute: typeof ProjecaoRoute
-  RedeRoute: typeof RedeRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/admin': {
-      id: '/admin'
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
       path: '/admin'
       fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/ia': {
-      id: '/ia'
+    '/_authenticated/ia': {
+      id: '/_authenticated/ia'
       path: '/ia'
       fullPath: '/ia'
-      preLoaderRoute: typeof IaRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/mapas': {
-      id: '/mapas'
+    '/_authenticated/mapas': {
+      id: '/_authenticated/mapas'
       path: '/mapas'
       fullPath: '/mapas'
-      preLoaderRoute: typeof MapasRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedMapasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/projecao': {
-      id: '/projecao'
+    '/_authenticated/projecao': {
+      id: '/_authenticated/projecao'
       path: '/projecao'
       fullPath: '/projecao'
-      preLoaderRoute: typeof ProjecaoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedProjecaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/rede': {
-      id: '/rede'
+    '/_authenticated/rede': {
+      id: '/_authenticated/rede'
       path: '/rede'
       fullPath: '/rede'
-      preLoaderRoute: typeof RedeRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedRedeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedIaRoute: typeof AuthenticatedIaRoute
+  AuthenticatedMapasRoute: typeof AuthenticatedMapasRoute
+  AuthenticatedProjecaoRoute: typeof AuthenticatedProjecaoRoute
+  AuthenticatedRedeRoute: typeof AuthenticatedRedeRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedIaRoute: AuthenticatedIaRoute,
+  AuthenticatedMapasRoute: AuthenticatedMapasRoute,
+  AuthenticatedProjecaoRoute: AuthenticatedProjecaoRoute,
+  AuthenticatedRedeRoute: AuthenticatedRedeRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
-  IaRoute: IaRoute,
-  MapasRoute: MapasRoute,
-  ProjecaoRoute: ProjecaoRoute,
-  RedeRoute: RedeRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

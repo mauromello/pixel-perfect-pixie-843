@@ -4,7 +4,7 @@ import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { PageHeader } from "@/components/AppShell";
 import { fontesDados } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/ia")({
+export const Route = createFileRoute("/_authenticated/ia")({
   head: () => ({
     meta: [
       { title: "IA, ML e Data Lake — PerdaZero" },
