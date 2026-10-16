@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import L from "leaflet";
 import { CircleMarker, MapContainer, Marker, Polygon, Polyline, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
-import { BookOpen, ChevronDown, Layers, PenTool, Search, X } from "lucide-react";
+import { BookOpen, ChevronDown, Flame, Layers, PenTool, Search, X } from "lucide-react";
 import { balancoAlimentador, perdasPorNivel, type Coord } from "@/lib/calculationEngine";
 import { useRede } from "@/lib/network-store";
 import { alertaRegulatorio, carregamentoTrafo, sobrecargaAlimentador, trechosDesenergizados } from "@/lib/estadoRede";
