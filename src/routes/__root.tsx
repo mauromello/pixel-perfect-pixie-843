@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { TraducaoTela } from "@/components/TraducaoTela";
 
 function NotFoundComponent() {
   return (
@@ -129,6 +130,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <TraducaoTela />
     </QueryClientProvider>
   );
 }
