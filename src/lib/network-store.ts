@@ -19,52 +19,109 @@ function tracado(o: Coord, ang: number, km: number, n = 4): Coord[][] {
   return Array.from({ length: n }, (_, i) => [pts[i]!, pts[i + 1]!]);
 }
 
+/** Gerador determinístico (mesma rede a cada carga). */
+let semente = 42;
+const rnd = () => { semente = (semente * 1103515245 + 12345) % 2147483648; return semente / 2147483648; };
+const entre = (a: number, b: number) => a + rnd() * (b - a);
+const pick = <T,>(xs: T[]) => xs[Math.floor(rnd() * xs.length)]!;
+
+const CLASSES = ["Residencial", "Comercial", "Rural", "Poder Público", "Industrial BT"];
+const SRATED = [45, 75, 112.5, 150, 225, 300];
+
 function al(cod: string, entrada: number, k: number, o: Coord, ang: number, tensaoKV = 13.8): Alimentador {
-  const comprimento = 14 + k * 3;
-  const segmentos: Segmento[] = tracado(o, ang, comprimento).map((coords, i) => ({ id: uid("sg"), cod: `${cod}-T${i + 1}`, coords, comprimento: comprimento / 4 }));
+  const nSeg = 6 + Math.floor(rnd() * 7); // 6–12 trechos
+  const comprimento = Math.round(entre(8, 32));
+  const segmentos: Segmento[] = tracado(o, ang, comprimento, nSeg).map((coords, i) => ({ id: uid("sg"), cod: `${cod}-T${i + 1}`, coords, comprimento: comprimento / nSeg }));
+  const nTr = 4 + Math.floor(rnd() * 5); // 4–8 trafos
+  const fracConsumo = entre(0.74, 0.9); // varia perdas entre alimentadores
+  const temACL = rnd() < 0.55;
+  const acl = temACL ? Math.round(entrada * entre(0.06, 0.16)) : 0;
+  const restante = entrada * fracConsumo - acl;
+  const pesos = Array.from({ length: nTr }, () => entre(0.5, 1.5));
+  const somaP = pesos.reduce((a, b) => a + b, 0);
+  const trafos: Trafo[] = pesos.map((w, t) => {
+    const si = Math.min(nSeg - 1, 1 + Math.floor(((nSeg - 1) * t) / nTr));
+    const p = segmentos[si]!.coords[1]!;
+    const consumo = (restante * w) / somaP;
+    const nCli = 2 + Math.floor(rnd() * 3);
+    const clientes: Cliente[] = Array.from({ length: nCli }, (_, c) =>
+      cli(`UC ${10000 + k * 100 + t * 10 + c} (${pick(CLASSES)})`, "cativo", Math.round(consumo / nCli)));
+    if (t === 0 && temACL) clientes.push(cli(`ACL ${pick(["Indústria", "Shopping", "Hospital", "Mineradora", "Frigorífico"])} ${cod}`, "livre", acl));
+    if (rnd() < 0.35) { const g = Math.round(entre(5, 30)); clientes.push(cli(`GD ${pick(["Solar", "Solar", "Biogás"])} ${cod}-${t + 1}`, "gd", Math.round(g * 0.2), Math.round(g * entre(2, 6)))); }
+    const carga = (consumo * 1000) / 730;
+    const srated = SRATED.reduce((b, x) => (Math.abs(x - carga / entre(0.45, 1.25)) < Math.abs(b - carga / 0.8) ? x : b), 225);
+    return {
+      id: uid("tr"), nome: `TR-${cod.slice(0, 3)}-${4500 + k * 10 + t + 1}`, p0: +(srated * 0.0045).toFixed(2), pcu: +(srated * 0.018).toFixed(2), srated,
+      segmentoId: segmentos[si]!.id, lat: p[0], lng: p[1], tensaoPrimKV: tensaoKV, tensaoSecV: pick([220, 220, 380]), clientes,
+    };
+  });
   return {
-    id: uid("al"), cod, entradaDisjuntor: entrada, exportacaoFronteira: Math.round(entrada * 0.03),
-    usoInterno: 12, iluminacaoPublica: Math.round(entrada * 0.04),
-    condutor: { r: 0.32, comprimento, corrente: 180 + k * 20 },
-    tensaoKV, ampacidade: 420, cor: CORES[k % CORES.length]!, segmentos,
-    trafos: [1, 3].map((si, t) => {
-      const p = segmentos[si]!.coords[1]!;
-      return {
-        id: uid("tr"), nome: `TR-${cod.slice(0, 3)}-${4500 + k * 10 + t + 1}`, p0: 1.1, pcu: 4.5, srated: 225,
-        segmentoId: segmentos[si]!.id, lat: p[0], lng: p[1], tensaoPrimKV: tensaoKV, tensaoSecV: 220,
-        clientes: [
-          cli(`UC ${3000 + k * 10 + t} (Residencial)`, "cativo", Math.round(entrada * 0.36)),
-          ...(t === 0 ? [cli(`ACL Indústria ${cod}`, "livre", Math.round(entrada * 0.12))] : []),
-          ...(t === 1 ? [cli(`GD Solar ${cod}`, "gd", 8, 40)] : []),
-        ],
-      };
-    }),
+    id: uid("al"), cod, entradaDisjuntor: entrada, exportacaoFronteira: Math.round(entrada * entre(0, 0.05)),
+    usoInterno: Math.round(entre(5, 25)), iluminacaoPublica: Math.round(entrada * entre(0.02, 0.06)),
+    condutor: { r: +entre(0.18, 0.6).toFixed(3), comprimento, corrente: Math.round(entre(140, 445)) },
+    tensaoKV, ampacidade: pick([380, 420, 420, 500]), cor: CORES[k % CORES.length]!, segmentos, trafos,
   };
 }
 
-const TAQ: Coord = [-19.915, -43.885], NEV: Coord = [-19.765, -44.085], UBE: Coord = [-18.918, -48.277];
 const se = (id: string, nome: string, regional: string, municipio: string, o: Coord, entradaAT: number, geracaoLocal: number, servicoAuxiliar: number, alvoPT: number, alvoPNT: number, alimentadores: Alimentador[]): Subestacao =>
   ({ id, nome, regional, municipio, lat: o[0], lng: o[1], tensaoATkV: 138, tensaoMTkV: 13.8, entradaAT, geracaoLocal, servicoAuxiliar, alvoPT, alvoPNT, alimentadores });
 
+type DefSE = [nome: string, regional: string, municipio: string, lat: number, lng: number, nAl: number, sigla: string];
+const SES: DefSE[] = [
+  ["SE Taquaril", "Metropolitana", "Belo Horizonte", -19.915, -43.885, 4, "TAQ"],
+  ["SE Neves", "Metropolitana", "Ribeirão das Neves", -19.765, -44.085, 3, "NEV"],
+  ["SE Barreiro", "Metropolitana", "Belo Horizonte", -19.975, -44.02, 3, "BAR"],
+  ["SE Betim-Centro", "Metropolitana", "Betim", -19.967, -44.198, 3, "BET"],
+  ["SE Contagem", "Metropolitana", "Contagem", -19.932, -44.054, 3, "CON"],
+  ["SE Uberlândia-Centro", "Triângulo", "Uberlândia", -18.918, -48.277, 4, "UBE"],
+  ["SE Uberlândia-Industrial", "Triângulo", "Uberlândia", -18.97, -48.32, 3, "UBI"],
+  ["SE Uberaba-Oeste", "Triângulo", "Uberaba", -19.748, -47.94, 3, "UBA"],
+  ["SE Montes Claros-Norte", "Norte", "Montes Claros", -16.69, -43.86, 3, "MCN"],
+  ["SE Montes Claros-Sul", "Norte", "Montes Claros", -16.76, -43.87, 3, "MCS"],
+  ["SE Januária", "Norte", "Januária", -15.488, -44.36, 2, "JAN"],
+  ["SE Varginha", "Sul", "Varginha", -21.551, -45.43, 3, "VAR"],
+  ["SE Pouso Alegre", "Sul", "Pouso Alegre", -22.23, -45.936, 3, "POA"],
+  ["SE Juiz de Fora-Centro", "Zona da Mata", "Juiz de Fora", -21.761, -43.35, 4, "JFC"],
+  ["SE Ubá", "Zona da Mata", "Ubá", -21.12, -42.943, 2, "UBA2"],
+  ["SE Ipatinga-Aço", "Vale do Aço", "Ipatinga", -19.468, -42.536, 3, "IPA"],
+  ["SE Governador Valadares", "Vale do Aço", "Governador Valadares", -18.851, -41.949, 3, "GVA"],
+];
+
 function demo() {
-  const subestacoes: Subestacao[] = [
-    se("se1", "SE Taquaril", "Metropolitana", "Belo Horizonte", TAQ, 24200, 0, 45, 7.8, 5.2, [al("TAQ-AL01", 12850, 1, TAQ, 200), al("TAQ-AL02", 10420, 2, TAQ, 250)]),
-    se("se2", "SE Neves", "Metropolitana", "Ribeirão das Neves", NEV, 21800, 300, 38, 7.5, 6.0, [al("NEV-AL01", 9870, 3, NEV, -40), al("NEV-AL02", 11230, 4, NEV, 10, 34.5)]),
-    se("se3", "SE Uberlândia-Centro", "Triângulo", "Uberlândia", UBE, 14900, 0, 22, 7.2, 3.5, [al("UBE-AL01", 14320, 5, UBE, 30)]),
-  ];
-  const f = subestacoes.flatMap((s) => s.alimentadores);
+  semente = 42;
+  let k = 0;
+  const subestacoes: Subestacao[] = SES.map(([nome, regional, municipio, lat, lng, nAl, sigla], i) => {
+    const o: Coord = [lat, lng];
+    const als = Array.from({ length: nAl }, (_, j) => {
+      k++;
+      const kv = rnd() < 0.15 ? 34.5 : rnd() < 0.1 ? 23 : 13.8;
+      return al(`${sigla.slice(0, 3)}${sigla.length > 3 ? "2" : ""}-AL${String(j + 1).padStart(2, "0")}`, Math.round(entre(5500, 16000)), k, o, (360 / nAl) * j + entre(-20, 20), kv);
+    });
+    const somaAl = als.reduce((a, b) => a + b.entradaDisjuntor, 0);
+    const geracaoLocal = rnd() < 0.25 ? Math.round(entre(100, 600)) : 0;
+    return se(`se${i + 1}`, nome, regional, municipio, o, Math.round(somaAl * entre(1.01, 1.04)) - geracaoLocal, geracaoLocal, Math.round(entre(15, 60)), +entre(6.5, 8.5).toFixed(1), +entre(2.5, 9).toFixed(1), als);
+  });
   const chaves: Chave[] = [];
-  for (const a of f) {
-    const s0 = a.segmentos[0]!, s2 = a.segmentos[2]!;
+  for (const s of subestacoes) for (const a of s.alimentadores) {
+    const s0 = a.segmentos[0]!;
     chaves.push({ id: uid("ch"), cod: `DJ-${a.cod}`, tipo: "disjuntor", lat: s0.coords[0]![0], lng: s0.coords[0]![1], normalAberta: false, aberta: false, alimentadorId: a.id, segmentoId: s0.id });
-    chaves.push({ id: uid("ch"), cod: `SEC-${a.cod}`, tipo: "seccionadora", lat: s2.coords[0]![0], lng: s2.coords[0]![1], normalAberta: false, aberta: false, alimentadorId: a.id, segmentoId: s2.id });
+    for (const idx of [2, Math.floor(a.segmentos.length * 0.66)]) {
+      const sg = a.segmentos[idx]!;
+      if (chaves.some((c) => c.segmentoId === sg.id)) continue;
+      chaves.push({ id: uid("ch"), cod: `SEC-${a.cod}-${idx + 1}`, tipo: "seccionadora", lat: sg.coords[0]![0], lng: sg.coords[0]![1], normalAberta: false, aberta: false, alimentadorId: a.id, segmentoId: sg.id });
+    }
   }
-  const tie = (cod: string, a: Alimentador, b: Alimentador): Chave => {
+  const tie = (a: Alimentador, b: Alimentador): Chave => {
     const ea = a.segmentos.at(-1)!, eb = b.segmentos.at(-1)!;
     const pa = ea.coords.at(-1)!, pb = eb.coords.at(-1)!;
-    return { id: uid("ch"), cod, tipo: "seccionadora", lat: (pa[0] + pb[0]) / 2, lng: (pa[1] + pb[1]) / 2, normalAberta: true, aberta: true, alimentadorId: a.id, segmentoId: ea.id, alimentadorBId: b.id, segmentoBId: eb.id };
+    return { id: uid("ch"), cod: `NA-${a.cod}-${b.cod}`, tipo: "seccionadora", lat: (pa[0] + pb[0]) / 2, lng: (pa[1] + pb[1]) / 2, normalAberta: true, aberta: true, alimentadorId: a.id, segmentoId: ea.id, alimentadorBId: b.id, segmentoBId: eb.id };
   };
-  chaves.push(tie("NA-TAQ01-TAQ02", f[0]!, f[1]!), tie("NA-TAQ01-NEV01", f[0]!, f[2]!), tie("NA-NEV01-NEV02", f[2]!, f[3]!));
+  for (const s of subestacoes) for (let j = 0; j + 1 < s.alimentadores.length; j++) chaves.push(tie(s.alimentadores[j]!, s.alimentadores[j + 1]!));
+  // interligações entre SEs vizinhas da mesma regional
+  for (let i = 0; i + 1 < subestacoes.length; i++) {
+    const a = subestacoes[i]!, b = subestacoes[i + 1]!;
+    if (a.regional === b.regional) chaves.push(tie(a.alimentadores.at(-1)!, b.alimentadores[0]!));
+  }
   return { subestacoes, chaves };
 }
 
