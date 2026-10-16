@@ -1,12 +1,13 @@
 import { Link, Outlet, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Activity, Calculator, BrainCircuit, LogOut, Map, Network, Scale, Settings, Zap } from "lucide-react";
+import { Activity, ArrowRightLeft, Calculator, BrainCircuit, LogOut, Map, Network, Scale, Settings, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nomePerfil, podeAcessar, type Area } from "@/lib/permissoes";
 import { IDIOMAS, useIdioma, useT } from "@/lib/i18n";
 
 const itens = [
-  { to: "/", label: "Balanço e Manobras", icon: Scale, area: "balanco" },
+  { to: "/", label: "Balanço Energético", icon: Scale, area: "balanco" },
+  { to: "/manobras", label: "Simulação de Manobras", icon: ArrowRightLeft, area: "manobras" },
   { to: "/metodologia", label: "Metodologia e Cálculo", icon: Calculator, area: "metodologia" },
   { to: "/rede", label: "Gestão do Modelo de Rede", icon: Network, area: "rede" },
   { to: "/projecao", label: "Projeção e Simulação", icon: Activity, area: "projecao" },
