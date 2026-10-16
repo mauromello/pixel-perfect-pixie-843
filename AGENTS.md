@@ -14,3 +14,4 @@
 - BDGD (ANEEL) GeoJSON import and CIM-XML/GeoJSON export live in `src/lib/bdgd.ts` (pure, tested) so file formats stay decoupled from the store.
 - All app screens live under `src/routes/_authenticated/` (client-only gate that loads the session, blocks inactive users and checks the screen's area); `/login` is the only public page.
 - Access per profile comes from `src/lib/permissoes.ts` (pure, tested) and roles are stored in the `user_roles` table, never on profiles, to avoid privilege escalation.
+- Thematic map indicators (Anexo II items 30/33) are derived in `src/lib/tematicos.ts` (pure, tested) from the network model so map themes stay consistent with the balance.
