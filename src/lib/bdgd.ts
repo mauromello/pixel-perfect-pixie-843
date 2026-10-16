@@ -1,8 +1,9 @@
 // Importação BDGD (ANEEL, PRODIST Módulo 10) em GeoJSON → modelo CIM único; exportação CIM-XML e GeoJSON.
 import type { Alimentador, Chave, Cliente, Coord, Segmento, Subestacao, Trafo } from "./calculationEngine";
 
+type P = { [K in "AMPACIDADE"|"ARE_LOC_LIVRE"|"CAMADA"|"COD_ID"|"COMP"|"CTMT"|"MUN"|"NOME"|"PAC_1"|"PAC_2"|"PER_FER"|"PER_TOT"|"POT_NOM"|"P_N_OPE"|"R1"|"REGIONAL"|"SUB"|"TEN_NOM"|"TEN_PRI"|"TEN_SEC"|"TIP_CC"|"TIP_UNID"|"UNI_TR_MT"|"camada"]?: unknown } & Record<string, unknown>;
 type Geometry = { type: string; coordinates: unknown };
-type Feature = { type: "Feature"; geometry: Geometry | null; properties: Record<string, unknown> | null };
+type Feature = { type: "Feature"; geometry: Geometry | null; properties: P | null };
 export type FeatureCollection = { type: "FeatureCollection"; features: Feature[]; name?: string };
 export type Camada = "SUB" | "CTMT" | "SSDMT" | "UNSEMT" | "UNTRMT" | "UCBT" | "UCMT" | "UGBT" | "UGMT";
 const CAMADAS: Camada[] = ["SSDMT", "UNSEMT", "UNTRMT", "CTMT", "SUB", "UCBT", "UCMT", "UGBT", "UGMT"];
@@ -10,7 +11,7 @@ const CAMADAS: Camada[] = ["SSDMT", "UNSEMT", "UNTRMT", "CTMT", "SUB", "UCBT", "
 const CORES = ["oklch(0.55 0.17 250)", "oklch(0.62 0.18 40)", "oklch(0.55 0.15 155)", "oklch(0.55 0.2 330)", "oklch(0.6 0.16 95)", "oklch(0.5 0.15 200)", "oklch(0.55 0.2 20)", "oklch(0.5 0.16 290)"];
 
 /** Identifica a camada BDGD pelo nome do arquivo/coleção ou pelos atributos. */
-export function detectarCamada(nome: string, props: Record<string, unknown>): Camada | null {
+export function detectarCamada(nome: string, props: P): Camada | null {
   const cam = String(props.CAMADA ?? props.camada ?? "").toUpperCase();
   if ((CAMADAS as string[]).includes(cam)) return cam as Camada;
   const n = nome.toUpperCase();
@@ -25,11 +26,11 @@ export function detectarCamada(nome: string, props: Record<string, unknown>): Ca
   return null;
 }
 
-const up = (p: Record<string, unknown> | null) => Object.fromEntries(Object.entries(p ?? {}).map(([k, v]) => [k.toUpperCase(), v]));
-const num = (v: unknown, d = 0) => { const n = typeof v === "number" ? v : Number(String(v ?? "").replace(",", ".")); return Number.isFinite(n) ? n : d; };
+const up = (p: P | null) => Object.fromEntries(Object.entries(p ?? {}).map(([k, v]) => [k.toUpperCase(), v]));
+const num = (v: unknown, d = 0) => { if (v === null || v === undefined || v === "") return d; const n = typeof v === "number" ? v : Number(String(v ?? "").replace(",", ".")); return Number.isFinite(n) ? n : d; };
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 /** Média mensal (MWh) a partir de ENE_01..ENE_12 em kWh */
-const energiaMes = (p: Record<string, unknown>) => {
+const energiaMes = (p: P) => {
   const v = Array.from({ length: 12 }, (_, i) => num(p[`ENE_${String(i + 1).padStart(2, "0")}`], NaN)).filter(Number.isFinite);
   return v.length ? v.reduce((a, b) => a + b, 0) / v.length / 1000 : 0;
 };
@@ -60,8 +61,8 @@ export type ResultadoImportacao = { subestacoes: Subestacao[]; chaves: Chave[]; 
 export function importarBDGD(arquivos: { nome: string; dados: FeatureCollection }[], opts: { tensaoPadraoKV?: number } = {}): ResultadoImportacao {
   const tPad = opts.tensaoPadraoKV ?? 13.8;
   const avisos: string[] = [];
-  const L: Record<Camada, Record<string, unknown>[]> = { SUB: [], CTMT: [], SSDMT: [], UNSEMT: [], UNTRMT: [], UCBT: [], UCMT: [], UGBT: [], UGMT: [] };
-  const geo = new Map<Record<string, unknown>, Coord[]>();
+  const L: Record<Camada, P[]> = { SUB: [], CTMT: [], SSDMT: [], UNSEMT: [], UNTRMT: [], UCBT: [], UCMT: [], UGBT: [], UGMT: [] };
+  const geo = new Map<P, Coord[]>();
   for (const a of arquivos) {
     for (const f of a.dados.features ?? []) {
       const p = up(f.properties);
@@ -121,7 +122,7 @@ export function importarBDGD(arquivos: { nome: string; dados: FeatureCollection 
   }
 
   // Unidades consumidoras e geradoras
-  const addCli = (p: Record<string, unknown>, tipo: Cliente["tipo"]) => {
+  const addCli = (p: P, tipo: Cliente["tipo"]) => {
     let t = trafoById.get(str(p.UNI_TR_MT));
     if (!t) t = feeders.get(str(p.CTMT))?.trafos[0];
     if (!t) return false;
@@ -185,7 +186,7 @@ export function importarBDGD(arquivos: { nome: string; dados: FeatureCollection 
 }
 
 /** Ordena trechos da cabeceira para jusante usando PAC_1/PAC_2 (conectividade BDGD). */
-function ordenarTrechos<T extends { p: Record<string, unknown>; coords: Coord[] }>(segs: T[]): T[] {
+function ordenarTrechos<T extends { p: P; coords: Coord[] }>(segs: T[]): T[] {
   if (segs.length < 2 || !segs.every((s) => s.p.PAC_1 !== undefined && s.p.PAC_2 !== undefined)) return segs;
   const pac2 = new Set(segs.map((s) => str(s.p.PAC_2)));
   const porPac1 = new Map<string, T[]>();
@@ -244,7 +245,7 @@ export function exportarCIM(ses: Subestacao[], chaves: Chave[]): string {
 /** Exporta o modelo como GeoJSON no padrão de atributos da BDGD. */
 export function exportarGeoJSON(ses: Subestacao[], chaves: Chave[]): FeatureCollection {
   const ll = (p: Coord) => [p[1], p[0]];
-  const F = (geometry: Geometry, properties: Record<string, unknown>): Feature => ({ type: "Feature", geometry, properties });
+  const F = (geometry: Geometry, properties: P): Feature => ({ type: "Feature", geometry, properties });
   const fs: Feature[] = [];
   for (const s of ses) {
     fs.push(F({ type: "Point", coordinates: ll([s.lat, s.lng]) }, { CAMADA: "SUB", COD_ID: s.id, NOME: s.nome, TEN_NOM: s.tensaoATkV }));
