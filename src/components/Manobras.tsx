@@ -1,116 +1,116 @@
-import { useState } from "react";
-import { ArrowRightLeft, Calculator } from "lucide-react";
-import { alimentadoresManobra, chavesManobra } from "@/lib/mock-data";
+import { useMemo, useState } from "react";
+import { ArrowRightLeft, RotateCcw, Zap } from "lucide-react";
+import { balancoAlimentador, balancoSubestacao } from "@/lib/calculationEngine";
+import { useRede } from "@/lib/network-store";
 
 const fmt = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
-type Reg = { id: number; chave: string; origem: string; destino: string; carga: number; horas: number; energia: number; periodo: string };
 
+/** Manobras restritas às chaves existentes no modelo de rede: fecha uma interligação NA e abre uma seccionadora. */
 export function Manobras() {
-  const [chave, setChave] = useState(chavesManobra[0]!);
-  const [origem, setOrigem] = useState("TAQ-AL01");
-  const [destino, setDestino] = useState("NEV-AL01");
-  const [carga, setCarga] = useState(2.5);
-  const [unid, setUnid] = useState<"MW" | "kW">("MW");
-  const [inicio, setInicio] = useState("2026-10-10T08:00");
-  const [fim, setFim] = useState("2026-10-12T20:00");
-  const [regs, setRegs] = useState<Reg[]>([]);
+  const { subestacoes, chaves, manobras, base, executarManobra, desfazerManobras } = useRede();
+  const feeders = subestacoes.flatMap((s) => s.alimentadores.map((a) => ({ a, s })));
+  const nomeAl = (id: string | undefined) => feeders.find((f) => f.a.id === id)?.a.cod ?? "—";
+  const ties = chaves.filter((c) => c.alimentadorBId && c.aberta);
+  const [tieId, setTieId] = useState("");
+  const tie = ties.find((t) => t.id === tieId) ?? ties[0];
+  const [origemId, setOrigemId] = useState("");
+  const lados = tie ? [tie.alimentadorId, tie.alimentadorBId!] : [];
+  const origem = lados.includes(origemId) ? origemId : lados[0];
+  const secs = chaves.filter((c) => c.alimentadorId === origem && !c.alimentadorBId && !c.aberta && c.tipo !== "disjuntor");
+  const [secId, setSecId] = useState("");
+  const sec = secs.find((s) => s.id === secId) ?? secs[0];
   const [erro, setErro] = useState("");
+  const [ok, setOk] = useState("");
 
-  // energia transferida acumulada por alimentador (MWh, positivo = recebeu)
-  const delta: Record<string, number> = {};
-  for (const r of regs) {
-    delta[r.origem] = (delta[r.origem] ?? 0) - r.energia;
-    delta[r.destino] = (delta[r.destino] ?? 0) + r.energia;
-  }
-  const envolvidos = new Set(regs.flatMap((r) => [r.origem, r.destino]));
-  const linhas = alimentadoresManobra.map((a) => {
-    const d = delta[a.cod] ?? 0;
-    // a carga transferida também leva o faturamento dos clientes atendidos (≈ 88%)
-    const fat = a.faturada + d * 0.88;
-    return { ...a, d, inj2: a.injetada + d, fat2: fat, perdaAntes: ((a.injetada - a.faturada) / a.injetada) * 100, perdaDepois: ((a.injetada + d - fat) / (a.injetada + d)) * 100 };
-  });
-  const ses = [...new Set(alimentadoresManobra.map((a) => a.se))].map((se) => {
-    const ls = linhas.filter((l) => l.se === se);
-    const antes = ls.reduce((s, l) => s + l.injetada, 0);
-    const depois = ls.reduce((s, l) => s + l.inj2, 0);
-    return { se, antes, depois, sub: ls.reduce((s, l) => s + l.inj2 - l.fat2, 0), afetada: ls.some((l) => envolvidos.has(l.cod)) };
-  });
+  const envolvidos = useMemo(() => new Set(manobras.flatMap((m) => [m.origem, m.destino])), [manobras]);
+  const antes = useMemo(() => new Map((base?.subestacoes ?? subestacoes).flatMap((s) => s.alimentadores.map((a) => [a.cod, a.entradaDisjuntor]))), [base, subestacoes]);
 
-  const recalcular = () => {
-    setErro("");
-    const horas = (new Date(fim).getTime() - new Date(inicio).getTime()) / 3_600_000;
-    if (origem === destino) return setErro("Origem e destino devem ser alimentadores diferentes.");
-    if (!(horas > 0)) return setErro("O fim da manobra deve ser depois do início.");
-    if (!(carga > 0)) return setErro("Indique uma carga transferida maior que zero.");
-    const mw = unid === "MW" ? carga : carga / 1000;
-    setRegs([{ id: Date.now(), chave, origem, destino, carga: mw, horas, energia: mw * horas, periodo: `${new Date(inicio).toLocaleString("pt-BR")} → ${new Date(fim).toLocaleString("pt-BR")}` }, ...regs]);
+  const executar = () => {
+    setErro(""); setOk("");
+    if (!tie || !sec) return setErro("Selecione uma chave de interligação e uma seccionadora do modelo de rede.");
+    const e = executarManobra(tie.id, sec.id);
+    if (e) setErro(e);
+    else setOk(`Manobra executada: ${sec.cod} aberta, ${tie.cod} fechada. Topologia, mapa e balanço atualizados.`);
   };
 
   return (
     <div className="panel">
-      <div className="panel-h"><span className="flex items-center gap-2"><ArrowRightLeft size={14} /> Registo e Simulação de Manobras na Rede</span><span className="text-xs font-normal text-muted-foreground">Energia manobrada e alteração de topologia</span></div>
+      <div className="panel-h"><span className="flex items-center gap-2"><ArrowRightLeft size={14} /> Registo e Simulação de Manobras na Rede</span><span className="text-xs font-normal text-muted-foreground">Somente chaves existentes no modelo de rede</span></div>
       <div className="grid gap-3 p-4 md:grid-cols-3">
-        <label className="text-xs text-muted-foreground">Chave de Seccionamento / Religador
-          <select className="inp mt-1 w-full" value={chave} onChange={(e) => setChave(e.target.value)}>{chavesManobra.map((c) => <option key={c}>{c}</option>)}</select></label>
-        <label className="text-xs text-muted-foreground">Alimentador de Origem
-          <select className="inp mt-1 w-full" value={origem} onChange={(e) => setOrigem(e.target.value)}>{alimentadoresManobra.map((a) => <option key={a.cod} value={a.cod}>{a.cod} ({a.se})</option>)}</select></label>
-        <label className="text-xs text-muted-foreground">Alimentador de Destino
-          <select className="inp mt-1 w-full" value={destino} onChange={(e) => setDestino(e.target.value)}>{alimentadoresManobra.map((a) => <option key={a.cod} value={a.cod}>{a.cod} ({a.se})</option>)}</select></label>
-        <label className="text-xs text-muted-foreground">Carga Transferida
-          <div className="mt-1 flex gap-1">
-            <input className="inp w-full font-mono" type="number" step="0.1" value={carga} onChange={(e) => setCarga(Number(e.target.value))} />
-            <select className="inp" value={unid} onChange={(e) => setUnid(e.target.value as "MW" | "kW")}><option>MW</option><option>kW</option></select>
-          </div></label>
-        <label className="text-xs text-muted-foreground">Início da Manobra
-          <input className="inp mt-1 w-full" type="datetime-local" value={inicio} onChange={(e) => setInicio(e.target.value)} /></label>
-        <label className="text-xs text-muted-foreground">Fim da Manobra
-          <input className="inp mt-1 w-full" type="datetime-local" value={fim} onChange={(e) => setFim(e.target.value)} /></label>
+        <label className="text-xs text-muted-foreground">1. Chave de interligação (NA) a fechar
+          <select className="inp mt-1 w-full" value={tie?.id ?? ""} onChange={(e) => setTieId(e.target.value)}>
+            {ties.length === 0 && <option value="">Nenhuma chave NA disponível</option>}
+            {ties.map((c) => <option key={c.id} value={c.id}>{c.cod} ({nomeAl(c.alimentadorId)} ↔ {nomeAl(c.alimentadorBId)})</option>)}
+          </select></label>
+        <label className="text-xs text-muted-foreground">2. Alimentador que cede carga
+          <select className="inp mt-1 w-full" value={origem ?? ""} onChange={(e) => setOrigemId(e.target.value)}>
+            {lados.map((id) => { const f = feeders.find((x) => x.a.id === id); return <option key={id} value={id}>{f?.a.cod} — {f?.a.tensaoKV} kV ({f?.s.nome})</option>; })}
+          </select></label>
+        <label className="text-xs text-muted-foreground">3. Seccionadora a abrir
+          <select className="inp mt-1 w-full" value={sec?.id ?? ""} onChange={(e) => setSecId(e.target.value)}>
+            {secs.length === 0 && <option value="">Nenhuma seccionadora fechada</option>}
+            {secs.map((c) => <option key={c.id} value={c.id}>{c.cod} ({c.tipo})</option>)}
+          </select></label>
       </div>
       <div className="flex flex-wrap items-center gap-2 px-4 pb-3">
-        <button className="btn-primary" onClick={recalcular}><Calculator size={14} /> Recalcular Equação de Balanço</button>
-        {regs.length > 0 && <button className="btn" onClick={() => setRegs([])}>Desfazer todas as manobras</button>}
+        <button className="btn-primary" onClick={executar}><Zap size={14} /> Executar manobra e recalcular balanço</button>
+        {base && <button className="btn" onClick={() => { desfazerManobras(); setOk(""); setErro(""); }}><RotateCcw size={14} /> Restaurar estado normal</button>}
         {erro && <span className="text-sm text-destructive">{erro}</span>}
-        <span className="ml-auto font-mono text-xs text-muted-foreground">E<sub>inj</sub>' = E<sub>inj</sub> ± Σ (carga × duração)</span>
+        {ok && <span className="text-sm text-success">{ok}</span>}
       </div>
 
-      <div className="grid gap-4 border-t border-border p-4 2xl:grid-cols-[1fr_380px]">
+      <div className="grid gap-4 border-t border-border p-4 2xl:grid-cols-[1fr_360px]">
         <div className="overflow-auto">
           <table className="tbl">
-            <thead><tr><th>Alimentador</th><th>SE</th><th>Injetada antes</th><th>Energia manobrada</th><th>Injetada após</th><th>Perda antes</th><th>Perda após</th></tr></thead>
-            <tbody>{linhas.map((l) => (
-              <tr key={l.cod} className={envolvidos.has(l.cod) ? "bg-warning/10" : ""}>
-                <td className="font-medium">{l.cod}</td><td>{l.se}</td>
-                <td className="font-mono">{fmt(l.injetada)}</td>
-                <td className={`font-mono ${l.d > 0 ? "text-success" : l.d < 0 ? "text-destructive" : "text-muted-foreground"}`}>{l.d === 0 ? "—" : (l.d > 0 ? "+" : "") + fmt(l.d)}</td>
-                <td className="font-mono font-semibold">{fmt(l.inj2)}</td>
-                <td className="font-mono">{l.perdaAntes.toFixed(2)}%</td>
-                <td className="font-mono font-semibold">{l.perdaDepois.toFixed(2)}%</td>
-              </tr>
-            ))}</tbody>
+            <thead><tr><th>Alimentador</th><th>SE</th><th>Tensão</th><th>Corrente / Ampac.</th><th>Trafos</th><th>Injetada antes</th><th>Injetada atual</th><th>Perda total</th></tr></thead>
+            <tbody>{feeders.map(({ a, s }) => {
+              const b = balancoAlimentador(a);
+              const ant = antes.get(a.cod) ?? a.entradaDisjuntor;
+              const uso = a.condutor.corrente / a.ampacidade;
+              return (
+                <tr key={a.id} className={envolvidos.has(a.cod) ? "bg-warning/10" : ""}>
+                  <td className="font-medium"><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full" style={{ background: a.cor }} />{a.cod}</td><td>{s.nome}</td>
+                  <td className="font-mono">{a.tensaoKV} kV</td>
+                  <td className={`font-mono ${uso > 0.9 ? "text-destructive" : ""}`}>{fmt(a.condutor.corrente)} / {a.ampacidade} A</td>
+                  <td className="font-mono">{a.trafos.length}</td>
+                  <td className="font-mono">{fmt(ant)}</td>
+                  <td className="font-mono font-semibold">{fmt(a.entradaDisjuntor)}</td>
+                  <td className="font-mono">{b.entradaLiquida ? ((b.lTotal / b.entradaLiquida) * 100).toFixed(2) : "0.00"}%</td>
+                </tr>
+              );
+            })}</tbody>
           </table>
-          <p className="mt-2 text-xs text-muted-foreground">Valores em MWh no ciclo. Linhas destacadas foram afetadas pelas manobras registadas.</p>
+          <p className="mt-2 text-xs text-muted-foreground">MWh no ciclo. Os trechos, trafos e clientes a jusante da seccionadora passam ao alimentador receptor. A manobra é bloqueada se formar laço, misturar níveis de tensão ou exceder a ampacidade.</p>
         </div>
         <div className="space-y-2">
           <div className="text-xs font-semibold text-muted-foreground">Sub-balanço por Subestação</div>
-          {ses.map((s) => (
-            <div key={s.se} className={`rounded border px-3 py-2 text-sm ${s.afetada ? "border-warning bg-warning/10" : "border-border"}`}>
-              <div className="flex justify-between font-medium"><span>{s.se}</span><span className="font-mono">{fmt(s.depois)} MWh</span></div>
-              <div className="flex justify-between text-xs text-muted-foreground"><span>Antes: {fmt(s.antes)}</span><span>Sub-balanço (perdas): {fmt(s.sub)}</span></div>
-            </div>
-          ))}
+          {subestacoes.map((s) => {
+            const afetada = s.alimentadores.some((a) => envolvidos.has(a.cod));
+            const b = balancoSubestacao(s);
+            return (
+              <div key={s.id} className={`rounded border px-3 py-2 text-sm ${afetada ? "border-warning bg-warning/10" : "border-border"}`}>
+                <div className="flex justify-between font-medium"><span>{s.nome}</span><span className="font-mono">{fmt(b.saidaMT)} MWh</span></div>
+                <div className="flex justify-between text-xs text-muted-foreground"><span>{s.tensaoATkV}/{s.tensaoMTkV} kV</span><span>Perdas AT: {fmt(b.lTotal)}</span></div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {regs.length > 0 && (
+      {manobras.length > 0 && (
         <div className="overflow-auto border-t border-border">
           <table className="tbl">
-            <thead><tr><th>Chave</th><th>Origem → Destino</th><th>Carga</th><th>Período</th><th>Duração</th><th>Energia manobrada</th></tr></thead>
-            <tbody>{regs.map((r) => (
-              <tr key={r.id}><td>{r.chave}</td><td>{r.origem} → {r.destino}</td><td className="font-mono">{fmt(r.carga)} MW</td><td className="text-xs">{r.periodo}</td><td className="font-mono">{fmt(r.horas)} h</td><td className="font-mono font-semibold">{fmt(r.energia)} MWh</td></tr>
+            <thead><tr><th>Quando</th><th>Fechada</th><th>Aberta</th><th>Origem → Destino</th><th>Trechos / Trafos</th><th>Energia transferida</th><th>Corrente receptor</th></tr></thead>
+            <tbody>{manobras.map((r) => (
+              <tr key={r.id}><td className="text-xs">{r.quando}</td><td>{r.tie}</td><td>{r.sec}</td><td>{r.origem} → {r.destino}</td><td className="font-mono">{r.segmentos} / {r.trafos}</td><td className="font-mono font-semibold">{fmt(r.energia)} MWh</td><td className="font-mono">{fmt(r.correnteDestino)} / {r.ampacidade} A</td></tr>
             ))}</tbody>
           </table>
         </div>
       )}
     </div>
   );
+}
+
+export function PerdasNiveis() {
+  return null;
 }
