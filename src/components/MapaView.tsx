@@ -1,7 +1,20 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import L from "leaflet";
 import { CircleMarker, MapContainer, Marker, Polygon, Polyline, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
-import { BookOpen, ChevronDown, Flame, Layers, PenTool, Search, X } from "lucide-react";
+import { BookOpen, Flame, Layers, PanelRightClose, PanelRightOpen, PenTool, Search, X } from "lucide-react";
+
+const BASES = [
+  { id: "osm", l: "Ruas (padrão)", url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", attr: "&copy; OpenStreetMap" },
+  { id: "sat", l: "Satélite", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attr: "&copy; Esri" },
+  { id: "dark", l: "Noturno", url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attr: "&copy; OpenStreetMap &copy; CARTO" },
+  { id: "light", l: "Claro", url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", attr: "&copy; OpenStreetMap &copy; CARTO" },
+];
+const ABAS = [
+  { id: "camadas", l: "Camadas", icon: Layers },
+  { id: "temas", l: "Temas", icon: Flame },
+  { id: "ferr", l: "Polígono", icon: PenTool },
+  { id: "leg", l: "Legenda", icon: BookOpen },
+] as const;
 import { balancoAlimentador, perdasPorNivel, type Coord } from "@/lib/calculationEngine";
 import { useRede } from "@/lib/network-store";
 import { alertaRegulatorio, carregamentoTrafo, sobrecargaAlimentador, trechosDesenergizados } from "@/lib/estadoRede";
@@ -83,7 +96,11 @@ export default function MapaView() {
   const corDe = (id: string | undefined) => feeders.find((f) => f.a.id === id)?.a.cor ?? COR_SE;
   const codDe = (id: string | undefined) => feeders.find((f) => f.a.id === id)?.a.cod ?? "—";
   const desligados = new Map(feeders.map(({ a }) => [a.id, trechosDesenergizados(a, chaves)]));
-  const [legAberta, setLegAberta] = useState(true);
+  const [painel, setPainel] = useState(true);
+  const [aba, setAba] = useState<(typeof ABAS)[number]["id"]>("camadas");
+  const [base, setBase] = useState("osm");
+  const [filtroAl, setFiltroAl] = useState("");
+  const baseInfo = BASES.find((b) => b.id === base)!;
 
   const buscar = () => {
     setErro("");
@@ -120,7 +137,7 @@ export default function MapaView() {
   return (
     <div className={`relative h-screen ${desenhando ? "[&_.leaflet-container]:cursor-crosshair" : ""}`}>
       <MapContainer center={[-19.9, -44]} zoom={9} className="h-full w-full" zoomControl={false}>
-        <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
+        <TileLayer key={baseInfo.id} url={baseInfo.url} attribution={baseInfo.attr} maxZoom={19} />
         <Ajustar pts={todosPts} />
         <FlyTo pos={alvo} />
         <Desenho ativo={desenhando} onPonto={(p) => setPoly((v) => [...v, p])} />
@@ -201,7 +218,7 @@ export default function MapaView() {
         {alvo && <CircleMarker center={alvo} radius={14} pathOptions={{ color: COR_ABERTA, weight: 3, fillOpacity: 0 }} />}
       </MapContainer>
 
-      <div className="panel absolute left-1/2 top-4 z-[1000] flex w-[min(640px,90%)] -translate-x-1/2 items-center gap-2 p-2">
+      <div className="panel absolute left-4 top-4 z-[1000] flex w-[min(520px,calc(100%-24rem))] items-center gap-2 p-1.5">
         <select className="inp" value={tipo} onChange={(e) => setTipo(e.target.value)}>
           {["Regional", "Município", "Subestação", "Alimentador", "Transformador", "Coordenadas"].map((t) => <option key={t}>{t}</option>)}
         </select>
@@ -210,92 +227,115 @@ export default function MapaView() {
       </div>
       {erro && <div className="panel absolute left-1/2 top-20 z-[1000] -translate-x-1/2 px-3 py-1.5 text-sm text-destructive">{erro}</div>}
 
-      <div className="absolute right-4 top-20 z-[1000] w-80 space-y-3">
-        <div className="panel">
-          <div className="panel-h"><span className="flex items-center gap-2"><Layers size={14} /> Camadas do Modelo de Rede</span></div>
-          <div className="space-y-1.5 p-3">
-            <p className="text-xs text-muted-foreground">Fonte: {origemModelo}</p>
-            {camadas.map((c) => (
-              <label key={c.k} className="flex cursor-pointer items-center gap-2 text-sm">
-                <input type="checkbox" checked={!!ativas[c.k]} onChange={(e) => setAtivas({ ...ativas, [c.k]: e.target.checked })} />
-                <span className="h-3 w-3 rounded-sm" style={{ background: c.c }} />
-                {c.l}
-              </label>
-            ))}
-            <div className="space-y-0.5 border-t border-border pt-2">
-              {feeders.map(({ a }) => (
-                <div key={a.id} className="flex items-center gap-2 text-xs"><span className="h-1.5 w-5 rounded" style={{ background: a.cor }} />{a.cod}<span className="ml-auto font-mono text-muted-foreground">{a.tensaoKV} kV</span></div>
+      <div className="absolute right-4 top-4 z-[1000] flex flex-col items-end gap-2">
+        <button className="panel flex items-center gap-2 px-3 py-2 text-sm font-medium" onClick={() => setPainel(!painel)} aria-label={painel ? "Recolher painel" : "Abrir painel"}>
+          {painel ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />} {painel ? "Recolher" : "Painel do mapa"}
+        </button>
+        {painel && (
+          <div className="panel flex max-h-[calc(100vh-7rem)] w-80 flex-col overflow-hidden">
+            <div className="grid grid-cols-4 border-b border-border">
+              {ABAS.map((x) => (
+                <button key={x.id} onClick={() => setAba(x.id)} className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${aba === x.id ? "border-b-2 border-primary font-semibold text-primary" : "text-muted-foreground hover:bg-muted"}`}>
+                  <x.icon size={15} />{x.l}
+                </button>
               ))}
             </div>
-          </div>
-        </div>
-        <div className="panel">
-          <div className="panel-h"><span className="flex items-center gap-2"><Flame size={14} /> Mapas Temáticos</span></div>
-          <div className="space-y-2 p-3 text-sm">
-            <select className="inp w-full" aria-label="Tema" value={tema} onChange={(e) => setTema(e.target.value as TemaId | "")}>
-              <option value="">— Sem tema —</option>
-              {TEMAS.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
-            </select>
-            <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={risco} onChange={(e) => setRisco(e.target.checked)} /><span className="h-3 w-3 rounded-sm border-2 border-dashed" style={{ borderColor: COS.sobrecarga }} />Áreas de risco</label>
-            <div className="text-xs text-muted-foreground">Tecnologias de combate a perdas:</div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1">
-              {TECNOLOGIAS.map((t) => (
-                <label key={t} className="flex cursor-pointer items-center gap-1 text-xs"><input type="checkbox" checked={!!tecs[t]} onChange={(e) => setTecs({ ...tecs, [t]: e.target.checked })} /><span className="h-2.5 w-2.5 rounded-full" style={{ background: COR_TEC[t] }} />{t}</label>
-              ))}
-            </div>
-            {temaInfo && (
-              <div className="border-t border-border pt-2">
-                <div className="mb-1 text-xs font-semibold">Áreas críticas — {temaInfo.nome}</div>
-                {criticas.map((c) => (
-                  <button key={c.id} className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-muted" onClick={() => setAlvo([c.lat, c.lng])}>
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: temaInfo.cor }} />{c.nome}<span className="text-muted-foreground">{c.alimentador}</span>
-                    <span className="ml-auto font-mono">{fmt(c[temaInfo.id])} {temaInfo.unidade}</span>
-                  </button>
-                ))}
-                <p className="pt-1 text-[11px] text-muted-foreground">PT/PNT calculadas do modelo de rede; indicadores comerciais simulados até integração CCS/SAP.</p>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="panel">
-          <button className="panel-h w-full" onClick={() => setLegAberta(!legAberta)} aria-label="Legenda operacional">
-            <span className="flex items-center gap-2"><BookOpen size={14} /> Legenda Operacional (COS · ABNT/CIM)</span>
-            <ChevronDown size={14} className={legAberta ? "rotate-180" : ""} />
-          </button>
-          {legAberta && (
-            <div className="max-h-72 space-y-1.5 overflow-y-auto p-3 text-xs">
-              {legenda.map((x) => (
-                <div key={x.l} className="flex items-center gap-2"><span className="flex w-12 justify-center" dangerouslySetInnerHTML={{ __html: x.svg }} />{x.l}</div>
-              ))}
-              <div className="flex items-center gap-2"><span className="flex w-12 justify-center"><span className="h-1 w-10 rounded" style={{ background: "oklch(0.55 0.17 250)" }} /></span>Trecho MT energizado (cor do alimentador)</div>
-              <div className="flex items-center gap-2"><span className="flex w-12 justify-center"><span className="w-10 border-t-4 border-dotted" style={{ borderColor: COS.desenergizado }} /></span>Trecho desenergizado (jusante de chave aberta)</div>
-              <div className="flex items-center gap-2"><span className="flex w-12 justify-center"><span className="h-2.5 w-10 rounded" style={{ background: COS.sobrecarga, opacity: 0.35 }} /></span>Trecho com sobrecarga (I &gt; ampacidade)</div>
-              <p className="pt-1 text-muted-foreground">Vermelho = fechado/energizado · Verde = aberto/seguro.</p>
-            </div>
-          )}
-        </div>
-        <div className="panel">
-          <div className="panel-h"><span className="flex items-center gap-2"><PenTool size={14} /> Seleção por Polígono</span>{poly.length > 0 && <button onClick={limpar} aria-label="Limpar"><X size={14} /></button>}</div>
-          <div className="space-y-2 p-3 text-sm">
-            {!desenhando && !resultado && <button className="btn-primary w-full justify-center" onClick={iniciar}>Desenhar área no mapa</button>}
-            {desenhando && (
-              <>
-                <p className="text-xs text-muted-foreground">Clique no mapa para adicionar vértices ({poly.length} adicionados). Mínimo 3.</p>
-                <button className="btn-primary w-full justify-center disabled:opacity-50" disabled={poly.length < 3} onClick={concluir}>Concluir polígono</button>
-              </>
-            )}
-            {resultado && (
-              <>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded bg-muted p-2"><div className="text-xs text-muted-foreground">Clientes</div><div className="kpi text-lg">{resultado.clientes}</div></div>
-                  <div className="rounded bg-muted p-2"><div className="text-xs text-muted-foreground">Trafos</div><div className="kpi text-lg">{resultado.trafos}</div></div>
+            <div className="flex-1 overflow-y-auto p-3 text-sm">
+              {aba === "camadas" && (
+                <div className="space-y-3">
+                  <div>
+                    <div className="mb-1 text-xs font-semibold">Mapa de fundo</div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {BASES.map((b) => (
+                        <button key={b.id} onClick={() => setBase(b.id)} className={`rounded border px-2 py-1.5 text-xs ${base === b.id ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"}`}>{b.l}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 border-t border-border pt-2">
+                    <p className="text-xs text-muted-foreground">Fonte: {origemModelo}</p>
+                    {camadas.map((c) => (
+                      <label key={c.k} className="flex cursor-pointer items-center gap-2 text-xs">
+                        <input type="checkbox" checked={!!ativas[c.k]} onChange={(e) => setAtivas({ ...ativas, [c.k]: e.target.checked })} />
+                        <span className="h-3 w-3 rounded-sm" style={{ background: c.c }} />{c.l}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="border-t border-border pt-2">
+                    <div className="mb-1 text-xs font-semibold">Alimentadores ({feeders.length})</div>
+                    <input className="inp mb-1 w-full text-xs" placeholder="Filtrar alimentador…" value={filtroAl} onChange={(e) => setFiltroAl(e.target.value)} />
+                    <div className="max-h-48 space-y-0.5 overflow-y-auto">
+                      {feeders.filter(({ a }) => a.cod.toLowerCase().includes(filtroAl.toLowerCase())).map(({ a }) => (
+                        <button key={a.id} className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-muted" onClick={() => { const p = a.segmentos[Math.floor(a.segmentos.length / 2)]?.coords[0]; if (p) setAlvo(p); }}>
+                          <span className="h-1.5 w-5 rounded" style={{ background: a.cor }} />{a.cod}<span className="ml-auto font-mono text-muted-foreground">{a.tensaoKV} kV</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">GD: {resultado.gd} · {fmt(resultado.kva)} kVA · consumo {fmt(resultado.consumo)} MWh</div>
-                <button className="btn w-full justify-center" onClick={iniciar}>Nova área</button>
-              </>
-            )}
+              )}
+              {aba === "temas" && (
+                <div className="space-y-2">
+                  <select className="inp w-full" aria-label="Tema" value={tema} onChange={(e) => setTema(e.target.value as TemaId | "")}>
+                    <option value="">— Sem tema —</option>
+                    {TEMAS.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                  </select>
+                  <label className="flex cursor-pointer items-center gap-2 text-xs"><input type="checkbox" checked={risco} onChange={(e) => setRisco(e.target.checked)} /><span className="h-3 w-3 rounded-sm border-2 border-dashed" style={{ borderColor: COS.sobrecarga }} />Áreas de risco</label>
+                  <div className="text-xs text-muted-foreground">Tecnologias de combate a perdas:</div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    {TECNOLOGIAS.map((t) => (
+                      <label key={t} className="flex cursor-pointer items-center gap-1 text-xs"><input type="checkbox" checked={!!tecs[t]} onChange={(e) => setTecs({ ...tecs, [t]: e.target.checked })} /><span className="h-2.5 w-2.5 rounded-full" style={{ background: COR_TEC[t] }} />{t}</label>
+                    ))}
+                  </div>
+                  {temaInfo && (
+                    <div className="border-t border-border pt-2">
+                      <div className="mb-1 text-xs font-semibold">Áreas críticas — {temaInfo.nome}</div>
+                      {criticas.map((c) => (
+                        <button key={c.id} className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-muted" onClick={() => setAlvo([c.lat, c.lng])}>
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ background: temaInfo.cor }} />{c.nome}<span className="text-muted-foreground">{c.alimentador}</span>
+                          <span className="ml-auto font-mono">{fmt(c[temaInfo.id])} {temaInfo.unidade}</span>
+                        </button>
+                      ))}
+                      <p className="pt-1 text-[11px] text-muted-foreground">PT/PNT calculadas do modelo de rede; indicadores comerciais simulados até integração CCS/SAP.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {aba === "ferr" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-semibold">Seleção por polígono{poly.length > 0 && <button onClick={limpar} aria-label="Limpar"><X size={14} /></button>}</div>
+                  {!desenhando && !resultado && <button className="btn-primary w-full justify-center" onClick={iniciar}>Desenhar área no mapa</button>}
+                  {desenhando && (
+                    <>
+                      <p className="text-xs text-muted-foreground">Clique no mapa para adicionar vértices ({poly.length} adicionados). Mínimo 3.</p>
+                      <button className="btn-primary w-full justify-center disabled:opacity-50" disabled={poly.length < 3} onClick={concluir}>Concluir polígono</button>
+                    </>
+                  )}
+                  {resultado && (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="rounded bg-muted p-2"><div className="text-xs text-muted-foreground">Clientes</div><div className="kpi text-lg">{resultado.clientes}</div></div>
+                        <div className="rounded bg-muted p-2"><div className="text-xs text-muted-foreground">Trafos</div><div className="kpi text-lg">{resultado.trafos}</div></div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">GD: {resultado.gd} · {fmt(resultado.kva)} kVA · consumo {fmt(resultado.consumo)} MWh</div>
+                      <button className="btn w-full justify-center" onClick={iniciar}>Nova área</button>
+                    </>
+                  )}
+                </div>
+              )}
+              {aba === "leg" && (
+                <div className="space-y-1.5 text-xs">
+                  {legenda.map((x) => (
+                    <div key={x.l} className="flex items-center gap-2"><span className="flex w-12 justify-center" dangerouslySetInnerHTML={{ __html: x.svg }} />{x.l}</div>
+                  ))}
+                  <div className="flex items-center gap-2"><span className="flex w-12 justify-center"><span className="h-1 w-10 rounded" style={{ background: "oklch(0.55 0.17 250)" }} /></span>Trecho MT energizado</div>
+                  <div className="flex items-center gap-2"><span className="flex w-12 justify-center"><span className="w-10 border-t-4 border-dotted" style={{ borderColor: COS.desenergizado }} /></span>Trecho desenergizado</div>
+                  <div className="flex items-center gap-2"><span className="flex w-12 justify-center"><span className="h-2.5 w-10 rounded" style={{ background: COS.sobrecarga, opacity: 0.35 }} /></span>Trecho com sobrecarga</div>
+                  <p className="pt-1 text-muted-foreground">Vermelho = fechado/energizado · Verde = aberto/seguro.</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
