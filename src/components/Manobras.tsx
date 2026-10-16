@@ -49,7 +49,7 @@ export function Manobras() {
   return (
     <div className="panel">
       <div className="panel-h"><span className="flex items-center gap-2"><ArrowRightLeft size={14} /> Registo e Simulação de Manobras na Rede</span><span className="text-xs font-normal text-muted-foreground">Energia manobrada e alteração de topologia</span></div>
-      <div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-3 p-4 md:grid-cols-3">
         <label className="text-xs text-muted-foreground">Chave de Seccionamento / Religador
           <select className="inp mt-1 w-full" value={chave} onChange={(e) => setChave(e.target.value)}>{chavesManobra.map((c) => <option key={c}>{c}</option>)}</select></label>
         <label className="text-xs text-muted-foreground">Alimentador de Origem
@@ -73,7 +73,7 @@ export function Manobras() {
         <span className="ml-auto font-mono text-xs text-muted-foreground">E<sub>inj</sub>' = E<sub>inj</sub> ± Σ (carga × duração)</span>
       </div>
 
-      <div className="grid gap-4 border-t border-border p-4 xl:grid-cols-[1fr_380px]">
+      <div className="grid gap-4 border-t border-border p-4 2xl:grid-cols-[1fr_380px]">
         <div className="overflow-auto">
           <table className="tbl">
             <thead><tr><th>Alimentador</th><th>SE</th><th>Injetada antes</th><th>Energia manobrada</th><th>Injetada após</th><th>Perda antes</th><th>Perda após</th></tr></thead>
