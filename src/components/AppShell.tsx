@@ -1,6 +1,6 @@
 import { Link, Outlet, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowRightLeft, Calculator, BrainCircuit, LogOut, Map, Network, Scale, Settings, Zap } from "lucide-react";
+import { Activity, ArrowRightLeft, Calculator, BrainCircuit, GraduationCap, LogOut, Map, Network, Scale, Settings, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nomePerfil, podeAcessar, type Area } from "@/lib/permissoes";
 import { IDIOMAS, useIdioma, useT } from "@/lib/i18n";
@@ -13,6 +13,7 @@ const itens = [
   { to: "/projecao", label: "Projeção e Simulação", icon: Activity, area: "projecao" },
   { to: "/mapas", label: "Mapas Geoespaciais", icon: Map, area: "mapas" },
   { to: "/ia", label: "IA, ML e Data Lake", icon: BrainCircuit, area: "ia" },
+  { to: "/guia", label: "Guia e Apresentação", icon: GraduationCap, area: "guia" },
   { to: "/admin", label: "Configurações e Segurança", icon: Settings, area: "admin" },
 ] as const satisfies readonly { to: string; label: string; icon: unknown; area: Area }[];
 

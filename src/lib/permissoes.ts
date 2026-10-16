@@ -1,6 +1,6 @@
 // Matriz de acesso por perfil (RBAC). Pura e testada.
 export type Perfil = "admin" | "operador" | "planejamento" | "consulta";
-export type Area = "balanco" | "manobras" | "rede" | "projecao" | "mapas" | "ia" | "admin" | "metodologia";
+export type Area = "balanco" | "manobras" | "rede" | "projecao" | "mapas" | "ia" | "admin" | "metodologia" | "guia";
 
 export const PERFIS: { id: Perfil; nome: string; descricao: string }[] = [
   { id: "admin", nome: "Administrador", descricao: "Acesso total, incluindo gestão de usuários" },
@@ -10,15 +10,15 @@ export const PERFIS: { id: Perfil; nome: string; descricao: string }[] = [
 ];
 
 export const MATRIZ: Record<Perfil, Area[]> = {
-  admin: ["balanco", "manobras", "metodologia", "rede", "projecao", "mapas", "ia", "admin"],
-  operador: ["balanco", "manobras", "metodologia", "rede", "projecao", "mapas", "ia"],
-  planejamento: ["balanco", "manobras", "metodologia", "projecao", "mapas", "ia"],
-  consulta: ["balanco", "projecao", "mapas"],
+  admin: ["balanco", "manobras", "metodologia", "rede", "projecao", "mapas", "ia", "admin", "guia"],
+  operador: ["balanco", "manobras", "metodologia", "rede", "projecao", "mapas", "ia", "guia"],
+  planejamento: ["balanco", "manobras", "metodologia", "projecao", "mapas", "ia", "guia"],
+  consulta: ["balanco", "projecao", "mapas", "guia"],
 };
 
 export function areaDoCaminho(path: string): Area {
   const seg = path.split("/").filter(Boolean)[0] ?? "";
-  if (seg === "rede" || seg === "projecao" || seg === "mapas" || seg === "ia" || seg === "admin" || seg === "metodologia" || seg === "manobras") return seg;
+  if (seg === "rede" || seg === "projecao" || seg === "mapas" || seg === "ia" || seg === "admin" || seg === "metodologia" || seg === "manobras" || seg === "guia") return seg;
   return "balanco";
 }
 
