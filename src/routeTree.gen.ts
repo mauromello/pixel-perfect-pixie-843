@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IaRouteImport } from './routes/ia'
 import { Route as MapasRouteImport } from './routes/mapas'
 import { Route as ProjecaoRouteImport } from './routes/projecao'
+import { Route as RedeRouteImport } from './routes/rede'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const ProjecaoRoute = ProjecaoRouteImport.update({
   path: '/projecao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RedeRoute = RedeRouteImport.update({
+  id: '/rede',
+  path: '/rede',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/ia': typeof IaRoute
   '/mapas': typeof MapasRoute
   '/projecao': typeof ProjecaoRoute
+  '/rede': typeof RedeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/ia': typeof IaRoute
   '/mapas': typeof MapasRoute
   '/projecao': typeof ProjecaoRoute
+  '/rede': typeof RedeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,14 @@ export interface FileRoutesById {
   '/ia': typeof IaRoute
   '/mapas': typeof MapasRoute
   '/projecao': typeof ProjecaoRoute
+  '/rede': typeof RedeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/ia' | '/mapas' | '/projecao'
+  fullPaths: '/' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/ia' | '/mapas' | '/projecao'
-  id: '__root__' | '/' | '/admin' | '/ia' | '/mapas' | '/projecao'
+  to: '/' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede'
+  id: '__root__' | '/' | '/admin' | '/ia' | '/mapas' | '/projecao' | '/rede'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +86,7 @@ export interface RootRouteChildren {
   IaRoute: typeof IaRoute
   MapasRoute: typeof MapasRoute
   ProjecaoRoute: typeof ProjecaoRoute
+  RedeRoute: typeof RedeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjecaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rede': {
+      id: '/rede'
+      path: '/rede'
+      fullPath: '/rede'
+      preLoaderRoute: typeof RedeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +142,7 @@ const rootRouteChildren: RootRouteChildren = {
   IaRoute: IaRoute,
   MapasRoute: MapasRoute,
   ProjecaoRoute: ProjecaoRoute,
+  RedeRoute: RedeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
