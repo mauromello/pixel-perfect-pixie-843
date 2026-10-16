@@ -1,4 +1,4 @@
-import type { Alimentador, Chave, Subestacao, Trafo } from "./calculationEngine";
+import { balancoAlimentador, type Alimentador, type Chave, type Subestacao, type Trafo } from "./calculationEngine";
 
 /** Estado operacional derivado do modelo de rede (convenção COS: vermelho = fechado/energizado, verde = aberto). */
 export const HORAS_MES = 730;
@@ -28,7 +28,10 @@ export function sobrecargaAlimentador(a: Alimentador): boolean {
   return a.ampacidade > 0 && a.condutor.corrente > a.ampacidade;
 }
 
-export function alertaRegulatorio(s: Subestacao, lTotalPct: number): boolean {
-  const meta = (s.metaPT ?? 0) + (s.metaPNT ?? 0);
-  return meta > 0 && lTotalPct > meta;
+/** Perda total dos alimentadores (% da injeção) acima da meta PRORET PT+PNT. */
+export function alertaRegulatorio(s: Subestacao): boolean {
+  const inj = s.alimentadores.reduce((x, a) => x + a.entradaDisjuntor, 0);
+  if (inj <= 0) return false;
+  const perda = s.alimentadores.reduce((x, a) => x + balancoAlimentador(a).lTotal, 0);
+  return (perda / inj) * 100 > s.alvoPT + s.alvoPNT;
 }
