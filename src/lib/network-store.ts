@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { aplicarRegrasCemig, registrarVersaoCCEE, type EntradaRegras, type MedicaoCCEE } from "./regrasCemig";
 import { manobrar, HORAS_CICLO, FATOR_CARGA_TRAFO, PARAMETROS_PERDA_PADRAO, validarParametrosPerda, type ParametrosPerda, type Alimentador, type Chave, type Cliente, type Condutor, type Coord, type Metodologia, type Segmento, type Subestacao, type Trafo } from "./calculationEngine";
 
 let seq = 1000;
@@ -162,6 +163,13 @@ type State = {
   manobras: RegistroManobra[];
   origemModelo: string;
   metodologia: Metodologia;
+  competencia: string;
+  mercadoRegras: Record<string, EntradaRegras>;
+  cceeVersoes: MedicaoCCEE[];
+  ajustesCCEE: Record<string, { entrada?: number; fronteira?: number }>;
+  setCompetencia: (competencia: string) => void;
+  aplicarMercado: (id: string, entrada: EntradaRegras, ccee: { entrada?: number; fronteira?: number }) => void;
+  registrarCCEE: (nova: MedicaoCCEE) => void;
   setMetodologia: (m: Metodologia) => void;
   updSubestacao: (id: string, p: Partial<Subestacao>) => void;
   updAlimentador: (id: string, p: Partial<Alimentador>) => void;
@@ -199,6 +207,24 @@ export const useRede = create<State>((set, get) => ({
   manobras: [],
   origemModelo: "Rede demonstrativa (dados fictícios)",
   metodologia: "fisico",
+  competencia: "2026-09",
+  mercadoRegras: {},
+  cceeVersoes: [],
+  ajustesCCEE: {},
+  registrarCCEE: nova => set(s => ({ cceeVersoes: registrarVersaoCCEE(s.cceeVersoes, nova) })),
+  setCompetencia: competencia => set(s => ({ competencia, subestacoes: s.subestacoes.map(se => ({ ...se, alimentadores: se.alimentadores.map(f => {
+    const { regrasCompetencia: antiga, entradaCCEE: ent, fronteiraCCEE: fr, ...resto } = f;
+    const entrada = s.mercadoRegras[`${f.id}:${competencia}`];
+    const ajustes = s.ajustesCCEE[`${f.id}:${competencia}`];
+    return { ...resto, ...(entrada ? { regrasCompetencia: aplicarRegrasCemig(entrada) } : {}), ...(ajustes?.entrada !== undefined ? { entradaCCEE: ajustes.entrada } : {}), ...(ajustes?.fronteira !== undefined ? { fronteiraCCEE: ajustes.fronteira } : {}) };
+  }) })) })),
+  aplicarMercado: (id, entrada, ccee) => {
+    const resultado = aplicarRegrasCemig(entrada);
+    if (resultado.fornecida === null) throw new Error("Parâmetros inválidos ou referência ausente.");
+    const competencia = resultado.competencia;
+    set(s => ({ mercadoRegras: { ...s.mercadoRegras, [`${id}:${competencia}`]: entrada }, ajustesCCEE: { ...s.ajustesCCEE, [`${id}:${competencia}`]: ccee } }));
+    get().setCompetencia(competencia);
+  },
   setMetodologia: (metodologia) => set({ metodologia }),
   updSubestacao: (id, p) => set((s) => ({ subestacoes: s.subestacoes.map((x) => (x.id === id ? { ...x, ...p } : x)) })),
   updAlimentador: (id, p) => set((s) => ({ subestacoes: mapAl(s.subestacoes, id, (f) => ({ ...f, ...p })) })),
@@ -220,6 +246,6 @@ export const useRede = create<State>((set, get) => ({
     return null;
   },
   desfazerManobras: () => set((s) => (s.base ? { ...s.base, base: null, manobras: [] } : {})),
-  carregarModelo: (m, origemModelo) => set({ ...m, parametrosPerda: { ...PARAMETROS_PERDA_PADRAO }, motorPT: "analitico", base: null, manobras: [], origemModelo }),
-  restaurarDemo: () => { const d = demo(); set({ ...d, parametrosPerda: { ...PARAMETROS_PERDA_PADRAO }, motorPT: "analitico", base: null, manobras: [], origemModelo: "Rede demonstrativa (dados fictícios)" }); },
+  carregarModelo: (m, origemModelo) => set({ ...m, mercadoRegras: {}, ajustesCCEE: {}, cceeVersoes: [], parametrosPerda: { ...PARAMETROS_PERDA_PADRAO }, motorPT: "analitico", base: null, manobras: [], origemModelo }),
+  restaurarDemo: () => { const d = demo(); set({ ...d, mercadoRegras: {}, ajustesCCEE: {}, cceeVersoes: [], parametrosPerda: { ...PARAMETROS_PERDA_PADRAO }, motorPT: "analitico", base: null, manobras: [], origemModelo: "Rede demonstrativa (dados fictícios)" }); },
 }));
