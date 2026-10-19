@@ -1,6 +1,18 @@
 // en-US dictionary keyed by the Portuguese text shown on screen.
 // "#" stands for any number inside the text (see traduzir in i18n.ts).
 export const EN_TELAS: Record<string, string> = {
+  "Medidores de fronteira": "Boundary meters", "Elementos da área": "Area elements", "Elementos da fronteira": "Boundary elements",
+  "Salvar área": "Save area", "Abrir área salva": "Open saved area", "Área salva.": "Area saved.", "Nenhuma área salva.": "No saved areas.",
+  "Filtrar elementos": "Filter elements", "Selecionados": "Selected", "Editar medidor": "Edit meter", "Exterior": "Outside",
+  "Destino": "Destination", "Fluxo direto (MWh)": "Forward flow (MWh)", "Fluxo reverso (MWh)": "Reverse flow (MWh)",
+  "Medida": "Measured", "Estimada": "Estimated", "Interno": "Internal", "Saída": "Output", "Fluxo (MWh)": "Flow (MWh)",
+  "Fluxo de fronteira externa": "External boundary flow", "Fluxo interno compensado": "Offset internal flow", "Estanqueidade da fronteira": "Boundary tightness",
+  "Balanço do sub-conjunto": "Subset balance", "Nenhum fluxo de fronteira.": "No boundary flows.", "Nenhum elemento disponível.": "No elements available.",
+  "Dados de demonstração — leituras fictícias e fluxos estimados.": "Demonstration data — fictitious readings and estimated flows.",
+  "Entre com uma conta para salvar ou abrir áreas.": "Sign in with an account to save or open areas.",
+  "Não foi possível salvar a área.": "Could not save the area.", "Não foi possível abrir as áreas salvas.": "Could not open saved areas.",
+  "Área salva inválida.": "Invalid saved area.", "Fronteira com fluxos estimados; balanço não homologado.": "Boundary contains estimated flows; balance is not validated.",
+  "A área contém elementos ausentes no modelo atual.": "The area contains elements missing from the current model.", "Leitura inválida": "Invalid reading",
   // Common
   "Analytics e Modelos ML": "Analytics & ML Models", "Data Lake e Infraestrutura": "Data Lake & Infrastructure", "Logs em Tempo Real": "Real-Time Logs",
   "Score mínimo": "Minimum score", "Todas": "All", "Assertividade do modelo": "Model accuracy", "Energia recuperável": "Recoverable energy",
