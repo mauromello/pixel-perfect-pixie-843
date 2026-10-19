@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { aplicarMetodologia, balancoAlimentador, balancoSubestacao, energiaFornecida, type Alimentador } from "@/lib/calculationEngine";
+import { aplicarMetodologia, balancoAlimentador, balancoSubestacao, energiaFornecida, perdaTecnica, fatorPerdas, PARAMETROS_PERDA_PADRAO, type Alimentador } from "@/lib/calculationEngine";
+import { useRede } from "@/lib/network-store";
 
 const al = (): Alimentador => ({
   id: "a", cod: "X", entradaDisjuntor: 1000, exportacaoFronteira: 50, usoInterno: 10, iluminacaoPublica: 20,
@@ -12,6 +13,33 @@ const al = (): Alimentador => ({
 });
 
 describe("calculationEngine", () => {
+  it("demo: all 52 feeders have nonnegative PNT and aggregate PT is 1.5–3.5% of net input", () => {
+    useRede.getState().restaurarDemo();
+    const feeders = useRede.getState().subestacoes.flatMap(s => s.alimentadores);
+    expect(feeders).toHaveLength(52);
+    const bs = feeders.map(balancoAlimentador);
+    for (const b of bs) expect(b.lNT).toBeGreaterThanOrEqual(0);
+    const pct = 100 * bs.reduce((n,b) => n + b.lTecnica, 0) / bs.reduce((n,b) => n + b.entradaLiquida, 0);
+    expect(pct).toBeGreaterThanOrEqual(1.5); expect(pct).toBeLessThanOrEqual(3.5);
+  });
+  it("MT uses Fd=1/3 and Fp=0.2·0.6+0.8·0.6² without changing trunk current", () => {
+    const f = { ...al(), condutor: { r: 0.3, comprimento: 10, corrente: 200 } };
+    expect(fatorPerdas(PARAMETROS_PERDA_PADRAO)).toBeCloseTo(0.408);
+    expect(perdaTecnica(f).condutor).toBeCloseTo(3 * 200 ** 2 * 0.3 * 10 * 730 / 1e6 / 3 * 0.408);
+    expect(f.condutor.corrente).toBe(200);
+  });
+  it("each editable factor changes calculated losses", () => {
+    const f = { ...al(), condutor: { r: 0.3, comprimento: 10, corrente: 200 } };
+    for (const key of ["fd", "coeficiente", "fc"] as const) {
+      expect(perdaTecnica({ ...f, parametrosPerda: { ...PARAMETROS_PERDA_PADRAO, [key]: 0.8 } }).total).not.toBe(perdaTecnica(f).total);
+    }
+  });
+  it("imported PT replaces feeder total, including zero, and missing rows fall back analytically", () => {
+    const f = { ...al(), condutor: { r: 0.3, comprimento: 10, corrente: 200 }, motorPT: "importado" as const };
+    expect(perdaTecnica({ ...f, ptImportada: 17 }).total).toBe(17);
+    expect(perdaTecnica({ ...f, ptImportada: 0 }).total).toBe(0);
+    expect(perdaTecnica(f).total).toBe(perdaTecnica({ ...f, motorPT: "analitico" }).total);
+  });
   it("E_delivered includes captive, free, internal use, public lighting and GD import", () => {
     expect(energiaFornecida(al()).total).toBe(600 + 200 + 10 + 20 + 30);
   });

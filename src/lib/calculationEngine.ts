@@ -1,6 +1,14 @@
 // Motor de cálculo do balanço energético. Todas as energias em MWh no ciclo mensal.
 export const HORAS_CICLO = 730;
 export const FATOR_CARGA_TRAFO = 0.6;
+export type ParametrosPerda = { fd: number; coeficiente: number; fc: number };
+export const PARAMETROS_PERDA_PADRAO: ParametrosPerda = { fd: 1 / 3, coeficiente: 0.2, fc: 0.6 };
+export function validarParametrosPerda(p: ParametrosPerda) {
+  return Object.values(p).every(v => Number.isFinite(v) && v >= 0 && v <= 1);
+}
+export function fatorPerdas(p: ParametrosPerda) {
+  return p.coeficiente * p.fc + (1 - p.coeficiente) * p.fc ** 2;
+}
 
 export type TipoCliente = "cativo" | "livre" | "gd";
 export type Cliente = {
@@ -20,6 +28,9 @@ export type Trafo = {
   clientes: Cliente[];
 };
 export type Alimentador = {
+  parametrosPerda?: ParametrosPerda;
+  motorPT?: "analitico" | "importado";
+  ptImportada?: number;
   id: string;
   cod: string;
   entradaDisjuntor: number; // E_breaker_net_input
@@ -81,12 +92,23 @@ export const perdasTotais = (entradaLiquida: number, fornecida: number) => entra
 /** L_NT = L_total_actual − L_technical_calculated */
 export const perdasNaoTecnicas = (lTotal: number, lTecnica: number) => lTotal - lTecnica;
 
-/** Perda técnica: condutor trifásico 3·I²·R·L + trafos P0 + Pcu·(carga)² */
-export function perdaTecnica(f: Alimentador) {
+/** Analytical MT losses use distributed load and loss factors; trunk current is never modified. */
+export function perdaTecnicaAnalitica(f: Alimentador) {
+  const p = f.parametrosPerda ?? PARAMETROS_PERDA_PADRAO;
   const { r, comprimento, corrente } = f.condutor;
-  const condutor = (3 * corrente ** 2 * r * comprimento * HORAS_CICLO) / 1e6;
-  const trafos = f.trafos.reduce((s, t) => s + ((t.p0 + t.pcu * FATOR_CARGA_TRAFO ** 2) * HORAS_CICLO) / 1000, 0);
+  const condutor = (3 * corrente ** 2 * r * comprimento * HORAS_CICLO * p.fd * fatorPerdas(p)) / 1e6;
+  const trafos = f.trafos.reduce((s, t) => s + perdaTecnicaTrafo(t, p.fc), 0);
   return { condutor, trafos, total: condutor + trafos };
+}
+export function perdaTecnicaTrafo(t: Trafo, fc = FATOR_CARGA_TRAFO) {
+  return ((t.p0 + t.pcu * fc ** 2) * HORAS_CICLO) / 1000;
+}
+/** Imported feeder totals are allocated by analytical MT/BT shares, not measured level losses. */
+export function perdaTecnica(f: Alimentador) {
+  const a = perdaTecnicaAnalitica(f);
+  if (f.motorPT !== "importado" || f.ptImportada === undefined || !Number.isFinite(f.ptImportada) || f.ptImportada < 0) return a;
+  const condutor = a.total > 0 ? f.ptImportada * a.condutor / a.total : f.ptImportada;
+  return { condutor, trafos: f.ptImportada - condutor, total: f.ptImportada };
 }
 
 /** L_f = E_breaker_net_input + E_embedded_generation − E_customer_imports − E_downstream_boundary_exports */
