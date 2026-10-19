@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { manobrar, type Alimentador, type Chave, type Cliente, type Condutor, type Coord, type Metodologia, type Segmento, type Subestacao, type Trafo } from "./calculationEngine";
+import { manobrar, HORAS_CICLO, FATOR_CARGA_TRAFO, type Alimentador, type Chave, type Cliente, type Condutor, type Coord, type Metodologia, type Segmento, type Subestacao, type Trafo } from "./calculationEngine";
 
 let seq = 1000;
 const uid = (p: string) => `${p}${++seq}`;
@@ -121,6 +121,17 @@ function demo() {
   for (let i = 0; i + 1 < subestacoes.length; i++) {
     const a = subestacoes[i]!, b = subestacoes[i + 1]!;
     if (a.regional === b.regional) chaves.push(tie(a.alimentadores.at(-1)!, b.alimentadores[0]!));
+  }
+  for (const s of subestacoes) {
+    s.medidoresFronteira = s.alimentadores.flatMap((f) => [
+      { id: `mf-${f.id}`, nome: `MF-${f.cod}`, origemId: f.id, destinoId: "exterior", energiaMWh: f.exportacaoFronteira, reversaMWh: 0, fonte: "estimada" as const },
+      ...f.trafos.map((t) => {
+        const consumo = t.clientes.reduce((v, c) => v + c.importacao, 0);
+        const gd = t.clientes.reduce((v, c) => v + (c.tipo === "gd" ? c.exportacao : 0), 0);
+        const perdas = (t.p0 + t.pcu * FATOR_CARGA_TRAFO ** 2) * HORAS_CICLO / 1000;
+        return { id: `mf-${t.id}`, nome: `MF-${t.nome}`, origemId: f.id, destinoId: t.id, energiaMWh: consumo + perdas, reversaMWh: gd, fonte: "estimada" as const };
+      }),
+    ]);
   }
   return { subestacoes, chaves };
 }

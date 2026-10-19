@@ -48,6 +48,13 @@ export type Subestacao = {
   alvoPT: number; // % regulatório PRORET
   alvoPNT: number;
   alimentadores: Alimentador[];
+  /** Medições direcionais mensais entre elementos identificados; exterior representa fora do modelo. */
+  medidoresFronteira?: MedidorFronteira[];
+};
+export type MedidorFronteira = {
+  id: string; nome: string; origemId: string; destinoId: string;
+  energiaMWh: number; reversaMWh: number;
+  fonte: "medida" | "estimada";
 };
 export type Metodologia = "fisico" | "regulatorio";
 
