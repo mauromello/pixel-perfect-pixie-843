@@ -1,3 +1,4 @@
+import type { ResultadoRegras } from "./regrasCemig";
 // Motor de cálculo do balanço energético. Todas as energias em MWh no ciclo mensal.
 export const HORAS_CICLO = 730;
 export const FATOR_CARGA_TRAFO = 0.6;
@@ -33,6 +34,9 @@ export type Trafo = {
   clientes: Cliente[];
 };
 export type Alimentador = {
+  regrasCompetencia?: ResultadoRegras;
+  entradaCCEE?: number;
+  fronteiraCCEE?: number;
   parametrosPerda?: ParametrosPerda;
   motorPT?: "analitico" | "importado";
   ptImportada?: number;
@@ -78,12 +82,15 @@ const clientes = (f: Alimentador) => f.trafos.flatMap((t) => t.clientes);
 
 /** Soma separada dos registradores de GD — proibido net metering. */
 export function registradoresGD(f: Alimentador) {
+  if (f.regrasCompetencia?.fornecida !== null && f.regrasCompetencia?.fornecida !== undefined) return { exportacao: f.regrasCompetencia.gdExport, importacao: f.regrasCompetencia.gdImport };
   const gd = clientes(f).filter((c) => c.tipo === "gd");
   return { exportacao: gd.reduce((s, c) => s + c.exportacao, 0), importacao: gd.reduce((s, c) => s + c.importacao, 0) };
 }
 
 /** E_delivered = cativos + livres (medido) + uso interno + iluminação pública + importação GD */
 export function energiaFornecida(f: Alimentador) {
+  const regras = f.regrasCompetencia;
+  if (regras && regras.fornecida !== null) return { cativos: regras.cativos, livres: regras.livres, gdImport: regras.gdImport, usoInterno: f.usoInterno + regras.ajustes, iluminacao: regras.iluminacao, total: regras.fornecida + f.usoInterno };
   const cs = clientes(f);
   const cativos = cs.filter((c) => c.tipo === "cativo").reduce((s, c) => s + c.importacao, 0);
   const livres = cs.filter((c) => c.tipo === "livre").reduce((s, c) => s + c.importacao, 0);
@@ -120,7 +127,7 @@ export function perdaTecnica(f: Alimentador) {
 export function balancoAlimentador(f: Alimentador) {
   const gd = registradoresGD(f);
   const forn = energiaFornecida(f);
-  const entradaLiquida = f.entradaDisjuntor + gd.exportacao - f.exportacaoFronteira;
+  const entradaLiquida = (f.entradaCCEE ?? f.entradaDisjuntor) + gd.exportacao - (f.fronteiraCCEE ?? f.exportacaoFronteira);
   const lTotal = perdasTotais(entradaLiquida, forn.total);
   const tec = perdaTecnica(f);
   return { entradaLiquida, geracaoEmbutida: gd.exportacao, fornecida: forn, lTotal, lTecnica: tec.total, tecnica: tec, lNT: perdasNaoTecnicas(lTotal, tec.total) };
