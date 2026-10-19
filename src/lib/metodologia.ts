@@ -67,16 +67,23 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
       const proporcao = totalL > 0 ? keepL / totalL : 1;
       let tec = perdaTecnica(f).condutor * proporcao;
       const corte = cuts.get(f.id) ?? f.segmentos.length;
+      const sgCorte = f.segmentos[corte];
+      const jusante = new Set(f.segmentos.slice(corte).map(g => g.id));
       const removidos = f.trafos.filter(t => !dentro.has(t.id));
       for (const t of removidos) {
+        if (jusante.has(t.segmentoId)) continue;
         const cobertura = ativos.some(m => m.origemId === t.id || m.destinoId === t.id);
         if (!cobertura) adicionar(`trafo-${t.id}`, t.nome, f.id, t.id, consumo(t) + perdasTrafo(t) - geracao(t), "estimada");
       }
       if (corte < f.segmentos.length) {
         const c = chaves.find(c => area.chavesCorte.includes(c.id) && c.alimentadorId === f.id && c.segmentoId === f.segmentos[corte]?.id);
-        const sg = f.segmentos[corte];
+        const sg = sgCorte;
         const perdaRemovida = perdaTecnica(f).condutor * (1 - proporcao);
-        if (sg && c && !ativos.some(m => m.origemId === sg.id || m.destinoId === sg.id)) adicionar(c.id, c.cod, f.id, sg.id, perdaRemovida, "estimada");
+        const leituraCorte = sg ? ativos.some(m => m.origemId === sg.id || m.destinoId === sg.id) : false;
+        if (sg && c && !leituraCorte) {
+          const fluxo = removidos.filter(t => jusante.has(t.segmentoId)).reduce((n,t) => n + consumo(t) + perdasTrafo(t) - geracao(t), 0) + perdaRemovida;
+          adicionar(c.id, c.cod, f.id, sg.id, fluxo, "estimada");
+        }
       }
       tec += mantidos.reduce((n,t) => n + perdasTrafo(t), 0);
       const gd = mantidos.reduce((n,t) => n + geracao(t), 0);
@@ -102,7 +109,9 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
   }
   for (const m of ativos) {
     if (!Number.isFinite(m.energiaMWh) || !Number.isFinite(m.reversaMWh) || m.energiaMWh < 0 || m.reversaMWh < 0) { alertas.push(`Leitura inválida: ${m.nome}`); continue; }
-    adicionar(m.id, m.nome, m.origemId, m.destinoId, m.energiaMWh - m.reversaMWh, m.fonte);
+    // A meter at a removed transformer is outside a cut area; the cut meter represents its boundary instead.
+    const cortado = ses.some(s => s.alimentadores.some(f => dentro.has(f.id) && f.trafos.some(t => (t.id === m.origemId || t.id === m.destinoId) && f.segmentos.slice(cuts.get(f.id)).some(g => g.id === t.segmentoId))));
+    if (!cortado) adicionar(m.id, m.nome, m.origemId, m.destinoId, m.energiaMWh - m.reversaMWh, m.fonte);
   }
   const externo = fronteira.filter(e => e.tipo !== "interno");
   const entradasFronteira = externo.filter(e => e.tipo === "entrada").reduce((n,e) => n + e.fluxo, 0);
