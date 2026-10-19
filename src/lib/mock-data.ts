@@ -73,15 +73,6 @@ export function balanco(id: string) {
   };
 }
 
-export const criticas = [
-  { id: 1, elemento: "SE Taquaril / TAQ-AL02", tipo: "Extração", descricao: "Lacuna de 4h na curva de carga (SCADA)", severidade: "Alta", variacao: "-" },
-  { id: 2, elemento: "NEV-AL01 / RL-NEV101", tipo: "Histórico", descricao: "Carga 38% acima da média 12m", severidade: "Média", variacao: "+38%" },
-  { id: 3, elemento: "TR-UBE-4501 (Uberlândia)", tipo: "Extração", descricao: "Medidor de fronteira sem leitura MDM", severidade: "Alta", variacao: "-" },
-  { id: 4, elemento: "SE Montes Claros 1", tipo: "Histórico", descricao: "Queda abrupta de energia injetada", severidade: "Média", variacao: "-22%" },
-  { id: 5, elemento: "Juiz de Fora / JUI-AL02", tipo: "Consistência", descricao: "Faturado > Injetado no ciclo (manobra não registrada?)", severidade: "Crítica", variacao: "+104%" },
-  { id: 6, elemento: "MD-88034 (Varginha)", tipo: "Histórico", descricao: "Consumo zerado por 3 ciclos", severidade: "Baixa", variacao: "-100%" },
-];
-
 export const fontesBalanco = [
   { id: "b1", elemento: "SE Taquaril", sistema: "SCADA", injetada: 48210, faturada: 42950, confiavel: true },
   { id: "b2", elemento: "SE Neves", sistema: "MDM", injetada: 39880, faturada: 33120, confiavel: true },

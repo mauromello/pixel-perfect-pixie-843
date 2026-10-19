@@ -55,12 +55,16 @@ const camposChave: Campo[] = [id, ["cod", "string", "Código operacional da chav
 entidade("Chave", "Inventário geoelétrico", "Chave", "GIS/BDGD", "Sob alteração / evento", camposChave);
 entidade("Religador", "Inventário geoelétrico", "Religador", "GIS/BDGD / ADMS", "Sob alteração / evento", camposChave.map(c => c[0] === "tipo" ? ["tipo", '"religador"', "Subtipo de Chave; não possui cadastro independente."] : c));
 entidade("Trafo", "Inventário geoelétrico", "Trafo MT/BT", "GIS/BDGD", "Sob alteração", [id, nome,
+ ["classe", "string | undefined", "Classe do trafo para faixa de instalações e fator de carga típico.", "—", "GIS/BDGD", true],
  ["p0", "number", "Perda em vazio do transformador.", "kW"], ["pcu", "number", "Perda nominal em cobre.", "kW"], ["srated", "number", "Potência nominal aparente.", "kVA"],
  ["segmentoId", "string", "Trecho ao qual o trafo está ligado.", "—", "GIS/BDGD", false, false, "Trecho existente no alimentador."], lat, lng,
  ["tensaoPrimKV", "number", "Tensão primária MT.", "kV", "GIS/BDGD", false, false, "Compatível com tensaoKV do alimentador."],
  ["tensaoSecV", "number", "Tensão secundária BT.", "V"], ["clientes", "Cliente[]", "Instalações de consumo/GD associadas."],
 ]);
 const camposCliente: Campo[] = [id, nome, ["tipo", '"cativo" | "livre" | "gd"', "Classe do consumidor; GD mantém importação/exportação separadas.", "—", "CCS / CCEE"],
+ ["trafoId", "string | null | undefined", "Vínculo explícito ao transformador MT/BT.", "—", "GIS/BDGD", true],
+ ["medidor", "MedidorInstalacao | null | undefined", "Medidor identificado da instalação.", "—", "MDM / CCS", true],
+ ["cargaKva", "number | undefined", "Carga aparente associada à instalação.", "kVA", "MDM / CCS", true],
  energia("importacao", "Registrador de consumo mensal; sem datas de ciclo faturado no modelo.", "CCS / MDM / CCEE"), energia("exportacao", "Registrador GD separado; nunca compensar com importacao.", "MDM / CCEE")];
 entidade("Cliente", "Mercado e GD", "Instalação", "CCS / MDM", "Mensal", camposCliente);
 entidade("Instalacao", "Mercado e GD", "Instalação", "CCS / MDM", "Mensal", camposCliente.map(c => [c[0], c[1], `${c[2]} Representada por Cliente; número de instalação separado ainda não existe.`, ...c.slice(3)] as Campo));
@@ -93,10 +97,12 @@ for (const [ent, nivel, origem, desc] of [
  ["Regional", "Regional", "GIS/BDGD", "Somente Subestacao.regional; sem entidade/código próprio."],
  ["Municipio", "Município", "GIS/BDGD", "Somente Subestacao.municipio; sem código IBGE próprio."],
  ["TrafoATMT", "Trafo AT/MT", "GIS/BDGD / SAP", "Não existe entidade Trafo AT/MT; tensões e perda AT agregadas na SE não a substituem."],
- ["Medidor", "Medidor de instalação", "MDM / CCS", "Não existe medidor de instalação com número, tecnologia ou tipo; MedidorFronteira é outra entidade."],
  ["ClimaDiario", "Município / estação", "INMET", "Não existe série meteorológica diária; Params.temperatura é manual."],
  ["UsinaGC", "Geração convencional", "SCADA/SMF / CCEE", "Não existe cadastro de usina; apenas Subestacao.geracaoLocal e Params.gc."],
 ] as const) entidade(ent, "Lacunas de extração", nivel, `${origem} (integração não implementada)`, "Não disponível", [["(não implementado)", "ausente", desc, "—", origem, true, false, "Lacuna: implementar antes de homologar a extração."]]);
+entidade("Medidor", "Inventário geoelétrico", "Instalação", "MDM / CCS", "Sob alteração", [id, ["numero", "string", "Número identificador do medidor."], ["tecnologia", '"AMI" | "Convencional"', "Tecnologia de medição."], ["tipo", '"bidirecional" | "consumo"', "Tipo dos registradores de medição."]]);
+entidade("serie_mensal", "Medições de fronteira", "Elemento / competência", "SCADA/SMF / MDM / CCS (demonstração)", "Mensal", [["elemento_id", "text", "ID estável do elemento no modelo.", "—", "Aplicação", false, true], ["competencia", "date", "Primeiro dia do mês de referência.", "mês", "Aplicação", false, true], ["energia_injetada", "double precision | null", "Energia injetada no mês.", "MWh", "SCADA/SMF", true], ["consumo_mwh", "double precision | null", "Energia consumida no mês.", "MWh", "CCS / MDM", true], ["carga_kva", "double precision | null", "Carga aparente do mês.", "kVA", "MDM", true], ["leitura_completa", "boolean", "Indica completude da leitura mensal."], ["demonstracao", "boolean", "Identifica dados fictícios."]]);
+entidade("criticas_parametros", "Banco / metodologia", "Regra", "Parametrização administrativa", "Sob alteração", [["regra", "text", "Identificador estável da regra.", "—", "Aplicação", false, true], ["parametro", "text", "Nome do limiar.", "—", "Aplicação", false, true], ["valor", "double precision", "Valor ilustrativo editável do limiar."]]);
 
 entidade("profiles", "Banco / acesso", "Usuário", "Lovable Cloud / cadastro", "Sob alteração", [
  ["id", "uuid", "Identificador do usuário autenticado.", "—", "Lovable Cloud", false, true],
