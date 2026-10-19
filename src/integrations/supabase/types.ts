@@ -59,6 +59,51 @@ export type Database = {
         }
         Relationships: []
       }
+      dicionario_dados: {
+        Row: {
+          chave: boolean
+          descricao: string
+          entidade: string
+          grupo: string
+          nivel_hierarquia: string
+          obrigatoria: boolean
+          periodicidade: string
+          regra_critica: string
+          sistema_origem: string
+          tipo: string
+          unidade: string
+          variavel: string
+        }
+        Insert: {
+          chave?: boolean
+          descricao?: string
+          entidade: string
+          grupo: string
+          nivel_hierarquia: string
+          obrigatoria?: boolean
+          periodicidade?: string
+          regra_critica?: string
+          sistema_origem: string
+          tipo: string
+          unidade?: string
+          variavel: string
+        }
+        Update: {
+          chave?: boolean
+          descricao?: string
+          entidade?: string
+          grupo?: string
+          nivel_hierarquia?: string
+          obrigatoria?: boolean
+          periodicidade?: string
+          regra_critica?: string
+          sistema_origem?: string
+          tipo?: string
+          unidade?: string
+          variavel?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ativo: boolean
