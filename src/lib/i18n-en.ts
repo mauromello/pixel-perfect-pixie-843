@@ -1,6 +1,20 @@
 // en-US dictionary keyed by the Portuguese text shown on screen.
 // "#" stands for any number inside the text (see traduzir in i18n.ts).
 export const EN_TELAS: Record<string, string> = {
+  "Fator de distribuição Fd": "Load distribution factor Fd", "Coeficiente a": "Coefficient a", "Fator de carga FC": "Load factor FC",
+  "D — PT importada (PERTEC PLUS)": "D — Imported technical losses (PERTEC PLUS)",
+  "PT = CSV por alimentador; sem linha: motor analítico": "TL = CSV per feeder; missing row: analytical engine",
+  "MT: 3·R·I²·L·Δt·Fd·Fp; Fp = a·FC + (1−a)·FC²; BT: (P0 + Pcu·FC²)·Δt; AT: sobra da SE": "MV: 3·R·I²·L·Δt·Fd·Fp; Fp = a·FC + (1−a)·FC²; LV: (P0 + Pcu·FC²)·Δt; HV: substation residual",
+  "Importar CSV PERTEC PLUS": "Import PERTEC PLUS CSV", "Alimentadores sem PT importada usam o motor analítico.": "Feeders without imported TL use the analytical engine.",
+  "Alimentadores importados": "Imported feeders", "Códigos fora do modelo": "Codes outside the model", "PT total": "Total technical losses",
+  "MT (condutores)": "MV (conductors)", "BT (trafos)": "LV (transformers)",
+  "exportação e importação lidas separadamente — nunca compensadas": "export and import read separately — never netted",
+  "PT importada por nível e por área parcial: rateio proporcional às perdas analíticas.": "Imported TL by voltage level and partial area: allocated in proportion to analytical losses.",
+  "Cabeçalho esperado: cod_alimentador;pt_mwh.": "Expected header: cod_alimentador;pt_mwh.",
+  "CSV inválido: informe código e PT não negativa em MWh.": "Invalid CSV: provide a code and nonnegative TL in MWh.",
+  "CSV inválido: valor não finito ou código duplicado.": "Invalid CSV: nonfinite value or duplicate code.",
+  "Nenhum alimentador do arquivo existe no modelo.": "No feeder in the file exists in the model.",
+  "Não foi possível ler o CSV.": "Could not read the CSV.",
   "Medidores de fronteira": "Boundary meters", "Elementos da área": "Area elements", "Elementos da fronteira": "Boundary elements",
   "Salvar área": "Save area", "Abrir área salva": "Open saved area", "Área salva.": "Area saved.", "Nenhuma área salva.": "No saved areas.",
   "Filtrar elementos": "Filter elements", "Selecionados": "Selected", "Editar medidor": "Edit meter", "Exterior": "Outside",

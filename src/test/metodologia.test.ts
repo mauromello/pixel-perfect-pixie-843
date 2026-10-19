@@ -1,8 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { gapRegulatorio, subBalanco, validarElementosArea, type ElementosArea } from "@/lib/metodologia";
+import { gapRegulatorio, subBalanco, validarElementosArea, importarPertecCSV, perdaTecnicaMotor, type ElementosArea } from "@/lib/metodologia";
 import { balancoAlimentador, type Alimentador, type Chave, type Subestacao } from "@/lib/calculationEngine";
 
 describe("gap regulatório", () => {
+  it("PERTEC CSV accepts decimal commas, reports unknown codes and keeps missing feeders analytical", () => {
+    const r = importarPertecCSV("cod_alimentador;pt_mwh\nA;12,5\nUNKNOWN;8", ["A", "B"]);
+    expect(r.valores).toEqual({ A: 12.5 }); expect(r.desconhecidos).toEqual(["UNKNOWN"]);
+    const f = rede()[0]?.alimentadores[0]; if (!f) throw new Error("fixture");
+    expect(perdaTecnicaMotor({ ...f, ptImportada: 12.5 }, "importado", 7, 7)).toBe(12.5);
+    expect(subBalanco([{ ...rede()[0], alimentadores: [{ ...f, ptImportada: 12.5 }] } as Subestacao], area(), "importado", 7).pt).toBeCloseTo(12.5);
+    expect(perdaTecnicaMotor(f, "importado", 7, 7)).toBeCloseTo(1.46);
+  });
+  it("PERTEC CSV rejects negative, duplicate, missing and nonfinite PT", () => {
+    for (const rows of ["A;-1", "A;1\nA;2", "A;", "A;Infinity"]) expect(() => importarPertecCSV(`cod_alimentador;pt_mwh\n${rows}`, ["A"])).toThrow();
+  });
   it("exposição = excedente acima da meta × tarifa", () => {
     const g = gapRegulatorio(1000, 150, 10, 300);
     expect(g.meta).toBe(100);
