@@ -222,7 +222,8 @@ export const useRede = create<State>((set, get) => ({
     const resultado = aplicarRegrasCemig(entrada);
     if (resultado.fornecida === null) throw new Error("Parâmetros inválidos ou referência ausente.");
     const competencia = resultado.competencia;
-    set(s => ({ mercadoRegras: { ...s.mercadoRegras, [`${id}:${competencia}`]: entrada }, ajustesCCEE: { ...s.ajustesCCEE, [`${id}:${competencia}`]: ccee } }));
+    if (!get().subestacoes.some(se => se.alimentadores.some(f => f.id === id))) throw new Error("Alimentador não encontrado.");
+    set(s => ({ mercadoRegras: { ...s.mercadoRegras, [`${id}:${competencia}`]: entrada }, ajustesCCEE: { ...s.ajustesCCEE, [`${id}:${competencia}`]: { ...s.ajustesCCEE[`${id}:${competencia}`], ...ccee } } }));
     get().setCompetencia(competencia);
   },
   setMetodologia: (metodologia) => set({ metodologia }),

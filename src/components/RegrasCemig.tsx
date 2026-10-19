@@ -24,6 +24,7 @@ export function RegrasCemig() {
       <label className="text-xs">{t("Alimentador")}<select aria-label={t("Alimentador")} className="inp ml-2" value={id} onChange={e => setId(e.target.value)}>{feeders.map(f => <option key={f.id} value={f.id}>{f.cod}</option>)}</select></label>
     </div>
     <p className="text-xs text-muted-foreground">{t("Dados de demonstração. Mercado e CCEE: entradas manuais, sem conexão externa. Alterações e versões ficam nesta sessão; exporte antes de recarregar.")}</p>
+    <p className="text-xs text-muted-foreground">{t("Aplicação substitui todo o mercado do alimentador nesta competência. Informe todas as classes; crescimento GD em percentual e crescimento B em consumidores. Premissas pendentes de validação PC/PM.")}</p>
     <Editor key={`${id}:${competencia}`} id={id} competencia={competencia} />
   </div>;
 }
@@ -100,7 +101,7 @@ function Editor({ id, competencia }: { id: string; competencia: string }) {
     </section>
     <div className="overflow-auto"><table className="tbl" aria-label={t("Resultados por segmento")}><thead><tr><th>{t("Segmento")}</th><th>{t("Regra")}</th><th>{t("Antes (MWh)")}</th><th>{t("Depois (MWh)")}</th><th>{t("Status")}</th></tr></thead><tbody>{resultado.segmentos.map((s, i) => <tr key={i}><td>{s.segmento}</td><td>{t(nomes[s.regra])}</td><td>{f(s.antes)}</td><td>{s.depois == null ? "—" : f(s.depois)}</td><td>{s.erro ? t(s.erro) : t("Calculado")}</td></tr>)}</tbody></table></div>
     <p className="font-semibold">{t("Energia fornecida depois das regras")}: {resultado.fornecida === null ? "—" : f(resultado.fornecida)} MWh · {t("GD A — injeção")}: {f(resultado.gdExport)} MWh</p>
-    <div className="flex flex-wrap gap-3"><Button disabled={resultado.fornecida === null} onClick={aplicar}>{t("Aplicar regras ao balanço")}</Button><Button variant="outline" onClick={() => {
+    <div className="flex flex-wrap gap-3"><Button disabled={resultado.fornecida === null || (!e.grupoA.length && !e.grupoB.length)} onClick={aplicar}>{t("Aplicar regras ao balanço")}</Button><Button variant="outline" onClick={() => {
       const blob = new Blob([JSON.stringify({ elemento: id, entrada: e, cceeVersoes }, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `regras-cemig-${id}-${competencia}.json`; a.click(); URL.revokeObjectURL(url);
     }}>{t("Exportar regras e versões")}</Button></div>
     {msg && <p role="status">{t(msg)}</p>}

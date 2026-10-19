@@ -24,7 +24,7 @@ export function projetarGD(anterior: number, competencia: string, crescimentoPer
   return naoNegativos(anterior) && Number.isFinite(crescimentoPercentual) && crescimentoPercentual >= -100 ? anterior / limitesMes(mes.anterior).horas * mes.horas * (1 + crescimentoPercentual / 100) : null;
 }
 export function projetarGrupoB(energia: number, consumidoresAquisicao: number, consumidoresAnterior: number, crescimentoConsumidores: number): number | null {
-  return naoNegativos(energia, consumidoresAquisicao, consumidoresAnterior) && consumidoresAquisicao > 0 && Number.isFinite(crescimentoConsumidores) && consumidoresAnterior + crescimentoConsumidores >= 0 ? energia / consumidoresAquisicao * (consumidoresAnterior + crescimentoConsumidores) : null;
+  return naoNegativos(energia, consumidoresAquisicao, consumidoresAnterior) && Number.isInteger(consumidoresAquisicao) && Number.isInteger(consumidoresAnterior) && consumidoresAquisicao > 0 && Number.isFinite(crescimentoConsumidores) && consumidoresAnterior + crescimentoConsumidores >= 0 ? energia / consumidoresAquisicao * (consumidoresAnterior + crescimentoConsumidores) : null;
 }
 export function projetarIP(cargaKW: number, horas: number, competencia: string): number | null {
   return naoNegativos(cargaKW, horas) && horas <= limitesMes(competencia).horas ? cargaKW * horas / 1000 : null;
@@ -75,5 +75,7 @@ export function aplicarRegrasCemig(e: EntradaRegras): ResultadoRegras {
   }
   const soma = (...regras: SegmentoRegra["regra"][]) => segmentos.filter(s => regras.includes(s.regra)).reduce((n, s) => n + (s.depois ?? 0), 0);
   const cativos = soma("cativo_a", "grupo_b"), livres = soma("livre_a"), gdImport = soma("gd_consumo"), gdExport = soma("gd_injecao"), iluminacao = soma("ip"), ajustes = soma("fraude", "recuperacao");
+  const duplicados = new Set(e.grupoA.map(a => a.classe)).size !== e.grupoA.length || new Set(e.grupoB.map(b => b.classe.trim())).size !== e.grupoB.length;
+  if (duplicados) segmentos.push({ segmento: "mercado", regra: "grupo_b", antes: 0, depois: null, erro: "Classes duplicadas não são permitidas." });
   return { competencia: e.competencia.slice(0, 7), segmentos, fornecida: segmentos.some(s => s.erro) ? null : cativos + livres + gdImport + iluminacao + ajustes, cativos, livres, gdImport, gdExport, iluminacao, ajustes, demonstracao: e.demonstracao };
 }

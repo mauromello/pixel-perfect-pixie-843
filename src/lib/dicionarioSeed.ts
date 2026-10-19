@@ -32,6 +32,9 @@ entidade("Alimentador", "Inventário geoelétrico", "Alimentador", "GIS/BDGD", "
  ["parametrosPerda", "ParametrosPerda", "Fatores analíticos; ausente usa os valores padrão.", "—", "Aplicação", true],
  ["motorPT", '"analitico" | "importado"', "Motor de PT ativo; sem valor usa analítico.", "—", "Aplicação", true],
  energia("ptImportada", "PT total do CSV PERTEC PLUS; ausente usa analítico; rateio MT/BT é estimado.", "PERTEC PLUS", true),
+ ["regrasCompetencia", "ResultadoRegras | undefined", "Mercado projetado manual por competência; dados de sessão, sem aquisição CCEE ou CCS implementada.", "—", "Aplicação", true],
+ energia("entradaCCEE", "Entrada mensal após rateio CCEE manual; valor ausente mantém entradaDisjuntor.", "CCEE (entrada manual)", true),
+ energia("fronteiraCCEE", "Exportação mensal após rateio CCEE manual; valor ausente mantém exportacaoFronteira.", "CCEE (entrada manual)", true),
 ]);
 entidade("Condutor", "Inventário geoelétrico", "Alimentador / MT", "GIS/BDGD", "Sob alteração", [
  ["r", "number", "Resistência equivalente por quilômetro.", "Ω/km"], ["comprimento", "number", "Comprimento total equivalente.", "km"],
