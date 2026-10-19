@@ -116,21 +116,6 @@ export const fontesDados = [
   { cat: "Dados Geoespaciais", origem: "GIS (BDGD ANEEL)", status: "Atrasado", volume: "910 GB", ultima: "há 9 h", sync: 88 },
 ];
 
-export const dicionario = [
-  { grupo: "Topologia", variavel: "cod_regional", tipo: "varchar(8)", nivel: "Regional", origem: "GIS / BDGD", descricao: "Regional (Metropolitana, Triângulo, Norte, Sul, Zona da Mata)" },
-  { grupo: "Topologia", variavel: "cod_ibge_municipio", tipo: "char(7)", nivel: "Município", origem: "IBGE", descricao: "Código IBGE do município (ex.: 3106200 = Belo Horizonte)" },
-  { grupo: "Topologia", variavel: "cod_subestacao", tipo: "varchar(10)", nivel: "SE", origem: "GIS / BDGD", descricao: "Identificador da subestação" },
-  { grupo: "Topologia", variavel: "cod_alimentador", tipo: "varchar(12)", nivel: "Alimentador", origem: "GIS / BDGD", descricao: "Identificador único do alimentador" },
-  { grupo: "Topologia", variavel: "cod_trafo", tipo: "varchar(16)", nivel: "Trafo", origem: "GIS / BDGD", descricao: "Identificador do transformador de distribuição" },
-  { grupo: "Medição", variavel: "energia_injetada_kwh", tipo: "decimal(14,3)", nivel: "SE / Alimentador", origem: "SCADA, SMF", descricao: "Energia que entra no elemento no período" },
-  { grupo: "Medição", variavel: "energia_faturada_kwh", tipo: "decimal(14,3)", nivel: "Instalação", origem: "CIS", descricao: "Energia faturada das unidades consumidoras" },
-  { grupo: "Manobra", variavel: "energia_manobrada_kwh", tipo: "decimal(14,3)", nivel: "Alimentador", origem: "ADMS / OMS", descricao: "Carga transferida × duração da manobra" },
-  { grupo: "Perdas", variavel: "perda_tecnica_kwh", tipo: "decimal(14,3)", nivel: "Todos", origem: "Motor de Cálculo", descricao: "Perdas por efeito Joule, núcleo e demais técnicas" },
-  { grupo: "Perdas", variavel: "perda_nao_tecnica_kwh", tipo: "decimal(14,3)", nivel: "Todos", origem: "Derivada", descricao: "Injetada − Faturada − Perda técnica" },
-  { grupo: "Perdas", variavel: "geracao_distribuida_kwh", tipo: "decimal(14,3)", nivel: "Instalação", origem: "Cadastro GD", descricao: "Energia injetada por micro/minigeração" },
-  { grupo: "Qualidade", variavel: "flag_confiavel", tipo: "boolean", nivel: "Balanço", origem: "Utilizador", descricao: "Indica se o balanço pode ser usado em relatórios" },
-];
-
 export const perfis = [
   { perfil: "Administrador", grupoAD: "GG-PERDAS-ADMIN", usuarios: 3, balanco: "Editar", projecao: "Editar", mapas: "Ver", ia: "Editar", admin: "Editar" },
   { perfil: "Analista de Perdas", grupoAD: "GG-PERDAS-ANALISTA", usuarios: 18, balanco: "Editar", projecao: "Editar", mapas: "Ver", ia: "Ver", admin: "—" },
