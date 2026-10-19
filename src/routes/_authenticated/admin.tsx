@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
-import { dicionario } from "@/lib/mock-data";
+import { DicionarioDados } from "@/components/DicionarioDados";
+import { dicionarioQuery } from "@/lib/dicionarioDados";
 import { GestaoUsuarios } from "@/components/GestaoUsuarios";
 import { ControleLogin } from "@/components/ControleLogin";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  loader: async ({ context }) => { await context.queryClient.ensureQueryData(dicionarioQuery(context.sessao.id)); },
   head: () => ({
     meta: [
       { title: "Configurações, Dicionário e Segurança — PerdaZero" },
@@ -21,8 +23,6 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const hierarquia = ["Distribuidora", "Regional", "Município", "Subestação (SE)", "Alimentador", "Religador", "Transformador", "Medidor", "Instalação (UC)"];
 
 function AdminPage() {
-  const grupos = [...new Set(dicionario.map((d) => d.grupo))];
-
   return (
     <div>
       <PageHeader title="Configurações, Dicionário de Dados e Segurança" subtitle="Documentação do modelo de rede elétrica e controlo de acessos" />
@@ -37,18 +37,7 @@ function AdminPage() {
             ))}
           </ol>
         </div>
-        <div className="panel overflow-auto">
-          <div className="panel-h">Dicionário de Dados</div>
-          <table className="tbl">
-            <thead><tr><th>Variável</th><th>Tipo</th><th>Nível</th><th>Origem</th><th>Descrição</th></tr></thead>
-            <tbody>{grupos.map((g) => [
-              <tr key={g}><td colSpan={5} className="bg-muted text-xs font-semibold uppercase text-muted-foreground">{g}</td></tr>,
-              ...dicionario.filter((d) => d.grupo === g).map((d) => (
-                <tr key={d.variavel}><td className="font-mono text-primary">{d.variavel}</td><td className="font-mono text-xs">{d.tipo}</td><td>{d.nivel}</td><td>{d.origem}</td><td>{d.descricao}</td></tr>
-              )),
-            ])}</tbody>
-          </table>
-        </div>
+        <DicionarioDados />
 
         <ControleLogin />
         <GestaoUsuarios />

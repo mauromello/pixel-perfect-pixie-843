@@ -15,6 +15,13 @@
       "when": 1792369390746,
       "tag": "0001_create_areas_subbalanco",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792370296701,
+      "tag": "0002_create_dicionario_dados",
+      "breakpoints": true
     }
   ]
 }

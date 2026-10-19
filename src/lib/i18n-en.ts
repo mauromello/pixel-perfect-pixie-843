@@ -1,6 +1,20 @@
 // en-US dictionary keyed by the Portuguese text shown on screen.
 // "#" stands for any number inside the text (see traduzir in i18n.ts).
 export const EN_TELAS: Record<string, string> = {
+  "Dicionário de Dados — Extrações CEMIG": "Data Dictionary — CEMIG Extracts",
+  "Chave de identificação": "Identification key",
+  "Editar": "Edit", "Atualizar": "Refresh", "Exportar CSV": "Export CSV",
+  "Grupo": "Group", "Entidade": "Entity", "Nível hierárquico": "Hierarchy level", "Sistema de origem": "Source system",
+  "Periodicidade": "Frequency", "Obrigatória": "Required", "Regra crítica": "Validation rule", "Todos os grupos": "All groups",
+  "Buscar no dicionário": "Search dictionary", "Nenhuma variável encontrada.": "No variables found.",
+  "Entre com uma conta para consultar o dicionário.": "Sign in with an account to view the dictionary.",
+  "Não foi possível carregar o dicionário.": "Could not load the dictionary.", "Não foi possível salvar o dicionário.": "Could not save the dictionary.",
+  "Alteração salva.": "Change saved.",
+  "Dados de demonstração. Origens externas são referências para extração, não integrações ativas. Lacunas indicam entidades ainda ausentes.": "Demonstration data. External sources are extraction references, not active integrations. Gaps identify missing entities.",
+  "Inventário geoelétrico": "Geo-electric inventory", "Perdas e metodologia": "Losses and methodology", "Mercado e GD": "Market and DG",
+  "Clima e projeção": "Climate and forecasting", "Lacunas de extração": "Extraction gaps", "Banco / acesso": "Database / access",
+  "Banco / metodologia": "Database / methodology", "Banco / documentação": "Database / documentation", "Sob alteração": "On change", "Por cenário": "Per scenario",
+  "Mensal": "Monthly", "Por evento": "Per event", "Não disponível": "Not available",
   "A — Analítico (PRODIST Módulo 7)": "A — Analytical (PRODIST Module 7)",
   "B — Parametrizado (% informado)": "B — Parameterized (specified %)",
   "C — Regulatório / IPTD (PRORET 2.6)": "C — Regulatory / IPTD (PRORET 2.6)",
