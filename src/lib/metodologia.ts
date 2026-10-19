@@ -1,5 +1,7 @@
 // Metodologia e Cálculo (Anexo II itens 1, 2, 4, 8, 10). Pura e testada.
 import { balancoAlimentador, perdaTecnica, perdaTecnicaAnalitica, perdaTecnicaTrafo, type Chave, type Alimentador, type Subestacao } from "./calculationEngine";
+import { auditarContexto, type ContextoAuditoria } from "./auditoriaTemporal";
+import { variacaoHistorica } from "./historico";
 
 export type Motor = "analitico" | "parametrizado" | "regulatorio" | "importado";
 export const MOTORES: { id: Motor; nome: string; desc: string }[] = [

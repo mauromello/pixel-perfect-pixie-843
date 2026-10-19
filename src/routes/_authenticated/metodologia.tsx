@@ -3,10 +3,11 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { useRede } from "@/lib/network-store";
 import { SubBalancos } from "@/components/SubBalancos";
+import { MedicoesCriticas } from "@/components/MedicoesCriticas";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { fatorPerdas, balancoAlimentador } from "@/lib/calculationEngine";
-import { CAMADAS, MOTORES, auditar, gapPorSE, saudeCamadas, importarPertecCSV, perdaTecnicaMotor, type Motor } from "@/lib/metodologia";
+import { MOTORES, gapPorSE, importarPertecCSV, perdaTecnicaMotor, type Motor } from "@/lib/metodologia";
 
 export const Route = createFileRoute("/_authenticated/metodologia")({
   head: () => ({
@@ -24,7 +25,6 @@ export const Route = createFileRoute("/_authenticated/metodologia")({
 
 const ABAS = ["Motores e Equações", "Sub-balanços Geoelétricos", "Gap Regulatório e Tarifa", "Medições e Críticas"] as const;
 const fmt = (n: number, d = 0) => n.toLocaleString("pt-BR", { maximumFractionDigits: d, minimumFractionDigits: d });
-const sevCls = { Alta: "bg-destructive/15 text-destructive", Média: "bg-chart-4/20", Baixa: "bg-muted" } as const;
 
 function MetodologiaPage() {
   const t = useT();
@@ -41,8 +41,6 @@ function MetodologiaPage() {
   const [pct, setPct] = useState(7);
   const [tarifa, setTarifa] = useState(320);
   const gaps = useMemo(() => gapPorSE(ses, tarifa), [ses, tarifa]);
-  const achados = useMemo(() => auditar(ses), [ses]);
-  const camadas = useMemo(() => saudeCamadas(ses), [ses]);
   const expTotal = gaps.reduce((x, g) => x + g.exposicao, 0);
   const feeders = ses.flatMap(s => s.alimentadores);
   const entrada = feeders.reduce((n,f) => n + balancoAlimentador(f).entradaLiquida, 0);
@@ -138,27 +136,7 @@ function MetodologiaPage() {
         </div>
       )}
 
-      {aba === "Medições e Críticas" && (
-        <div className="space-y-4">
-          <div className="panel">
-            <div className="panel-h">Camadas de medição</div>
-            <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-6">
-              {camadas.map((c, i) => (
-                <div key={c.camada} className="rounded border p-3 text-center"><div className="text-xs text-muted-foreground">{i + 1}. {CAMADAS[i]}</div><div className="font-mono text-lg">{fmt(c.pct, 1)}%</div></div>
-              ))}
-            </div>
-          </div>
-          <div className="panel overflow-auto">
-            <div className="panel-h">Achados das 8 regras de auditoria ({achados.length})</div>
-            <table className="tbl">
-              <thead><tr><th>Regra</th><th>Elemento</th><th>Descrição</th><th>Severidade</th></tr></thead>
-              <tbody>{achados.slice(0, 200).map((a, i) => (
-                <tr key={i}><td>{a.regra}</td><td>{a.elemento}</td><td>{a.descricao}</td><td><span className={`badge ${sevCls[a.severidade]}`}>{a.severidade}</span></td></tr>
-              ))}</tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      {aba === "Medições e Críticas" && <MedicoesCriticas />}
     </div>
   );
 }
