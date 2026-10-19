@@ -213,8 +213,8 @@ export function auditar(ses: Subestacao[], contexto?: ContextoAuditoria): Achado
   }
   for (const a of out) {
     const f = ses.flatMap(s => s.alimentadores).find(f => a.elemento.endsWith(` / ${f.cod}`));
-    a.elementoId = f?.id;
-    a.competencia = contexto?.competencia;
+    if (f) a.elementoId = f.id;
+    if (contexto) a.competencia = contexto.competencia;
     a.valorMedido = f ? balancoAlimentador(f).lTotal : null;
     a.valorReferencia = null;
     a.variacaoHistorica = f && contexto ? variacaoHistorica(contexto.serie, f.id, contexto.competencia, "energia_injetada")?.percentual ?? null : null;
