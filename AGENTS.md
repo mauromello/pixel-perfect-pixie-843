@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 - Energy-balance business rules live only in `src/lib/calculationEngine.ts` (pure, tested); UI reads network data from the zustand store in `src/lib/network-store.ts` so edits propagate across screens.
+- Initial-screen aggregation uses pure `balancoNo`/`serieBalancoNo`: aggregate feeder accounting once, report upstream substation losses separately for additive regional KPIs, and require complete stored history rather than fabricate chart months.
 - Analytical factors and active imported feeder PT are applied through the shared store to feeder model fields; the pure engine consumes them so balance and switching retain a single source of truth. Imported feeder totals use analytical MT/BT proportions for level and partial-area allocation, not measured level losses.
 - PERTEC PLUS CSV validation lives in the pure Methodology module and imports replace the previous dataset atomically, so malformed files cannot partially update feeder losses.
 - Extraction metadata is maintained explicitly in `src/lib/dicionarioSeed.ts` and read from `dicionario_dados`, never from mock arrays; absent model entities are documented as gaps rather than invented schemas. Dictionary queries are session-keyed under the client-only authenticated layout and paginated to avoid truncation.

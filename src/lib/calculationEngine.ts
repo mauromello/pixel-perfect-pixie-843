@@ -140,6 +140,70 @@ export function aplicarMetodologia(b: { entradaLiquida: number; lTotal: number; 
   return { pt, pnt, exposicao: b.lTotal - (pt + pnt) };
 }
 
+export type ResultadoNo = { injetada: number; faturada: number; pt: number; pnt: number; perdaAT: number; fontes: { id: string; alvoPT: number; alvoPNT: number }[] };
+/** Aggregate one accounting level only: regional/distributor KPIs are additive feeder balances.
+ * Upstream substation losses are reported separately, never counted again in feeder KPIs. */
+export function balancoNo(ses: Subestacao[], ids: string[], metodologia: Metodologia, ptManual?: number): ResultadoNo {
+  const selecionados = new Set(ids);
+  const global = selecionados.has("root");
+  const resultado: ResultadoNo = { injetada: 0, faturada: 0, pt: 0, pnt: 0, perdaAT: 0, fontes: [] };
+  for (const se of ses) {
+    const inteira = global || selecionados.has(se.id);
+    if (inteira) resultado.perdaAT += balancoSubestacao(se).lTotal;
+    for (const f of se.alimentadores) {
+      const b = balancoAlimentador(f);
+      let entrada = 0, consumo = 0, tecnica = 0;
+      if (inteira || selecionados.has(f.id)) {
+        entrada = b.entradaLiquida; consumo = b.fornecida.total; tecnica = b.lTecnica;
+        resultado.fontes.push({ id: f.id, alvoPT: se.alvoPT, alvoPNT: se.alvoPNT });
+      } else {
+        const consumoClientes = f.trafos.reduce((s, t) => s + t.clientes.reduce((n, c) => n + c.importacao, 0), 0);
+        const tec = perdaTecnica(f);
+        const analitica = perdaTecnicaAnalitica(f);
+        for (const t of f.trafos) {
+          const total = t.clientes.reduce((n, c) => n + c.importacao, 0);
+          const completa = selecionados.has(t.id);
+          const cs = completa ? t.clientes : t.clientes.filter(c => selecionados.has(c.id) || (c.medidor && selecionados.has(c.medidor.id)));
+          if (!completa && !cs.length) continue;
+          const fornecida = cs.reduce((n, c) => n + c.importacao, 0);
+          const parcela = total > 0 ? fornecida / total : completa ? 1 : 0;
+          const bt = analitica.trafos > 0 ? tec.trafos * perdaTecnicaTrafo(t, f.parametrosPerda?.fc) / analitica.trafos : 0;
+          const pt = bt * parcela + (consumoClientes > 0 ? tec.condutor * fornecida / consumoClientes : 0);
+          consumo += fornecida; tecnica += pt;
+          entrada += fornecida + pt;
+          if (completa) resultado.fontes.push({ id: t.id, alvoPT: se.alvoPT, alvoPNT: se.alvoPNT });
+          else for (const c of cs) resultado.fontes.push({ id: c.id, alvoPT: se.alvoPT, alvoPNT: se.alvoPNT });
+        }
+      }
+      const m = aplicarMetodologia({ entradaLiquida: entrada, lTotal: entrada - consumo, lTecnica: tecnica, lNT: entrada - consumo - tecnica }, metodologia, se.alvoPT, se.alvoPNT);
+      resultado.injetada += entrada; resultado.faturada += consumo; resultado.pt += m.pt; resultado.pnt += m.pnt;
+    }
+  }
+  if (ptManual !== undefined && Number.isFinite(ptManual) && ptManual >= 0 && ptManual <= 100) {
+    resultado.pt = resultado.injetada * ptManual / 100;
+    resultado.pnt = resultado.injetada - resultado.faturada - resultado.pt;
+  }
+  return resultado;
+}
+
+/** Historical energy comes only from complete persisted readings at the chosen accounting level. */
+export function serieBalancoNo(b: ResultadoNo, leituras: { elemento_id: string; competencia: string; energia_injetada: number | null; consumo_mwh: number | null; leitura_completa: boolean }[], meses: string[], metodologia: Metodologia, ptManual?: number) {
+  const indice = new Map(leituras.map(r => [`${r.elemento_id}:${r.competencia}`, r]));
+  const serie = meses.flatMap(mes => {
+    if (!b.fontes.length) return [];
+    let injetada = 0, faturada = 0, perdasReg = 0;
+    for (const fonte of b.fontes) {
+      const r = indice.get(`${fonte.id}:${mes}`);
+      if (!r?.leitura_completa || r.energia_injetada == null || r.consumo_mwh == null || !Number.isFinite(r.energia_injetada) || !Number.isFinite(r.consumo_mwh)) return [];
+      injetada += r.energia_injetada; faturada += r.consumo_mwh;
+      perdasReg += r.energia_injetada * (fonte.alvoPT + fonte.alvoPNT) / 100;
+    }
+    return [{ mes: mes.slice(0, 7), injetada, perdas: metodologia === "regulatorio" && ptManual === undefined ? perdasReg : injetada - faturada }];
+  });
+  const completa = serie.length === meses.length && meses.length === 6;
+  return { completa, serie: completa ? serie : [{ mes: (meses.at(-1) ?? "").slice(0, 7), injetada: b.injetada, perdas: b.pt + b.pnt }] };
+}
+
 // ================= Topologia CIM (IEC 61970 / CIM17) =================
 export type Coord = [number, number]; // [lat, lng]
 /** ACLineSegment — trecho de média tensão com traçado geográfico */
