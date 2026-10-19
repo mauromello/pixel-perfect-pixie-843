@@ -120,6 +120,7 @@ function BalancoPage() {
             <div className="panel">
               <div className="panel-h">Balanço {selecionado.id === "root" ? "Global" : "Individualizado"} — {selecionado.nome}<span className="text-xs font-normal text-muted-foreground">{selecionado.tipo}</span></div>
               {!grafico.completa && <p role="status" className="px-3 pt-3 text-xs text-muted-foreground">{t("Histórico de seis meses indisponível ou incompleto para este nó; exibindo somente o ciclo atual.")}</p>}
+              {grafico.completa && <p className="px-3 pt-3 text-xs text-muted-foreground">{t("Histórico: injeção e consumo registrados; não inclui todos os fluxos direcionais do balanço atual.")}</p>}
               {selecionado.tipo === "Trafo" || selecionado.tipo === "Instalação" || selecionado.tipo === "Religador" ? <p className="px-3 pt-3 text-xs text-muted-foreground">{t("Ciclo atual a jusante: entrada estimada por consumo e PT alocada; sem medição independente de PNT.")}</p> : null}
               <div className="h-64 p-3">
                 <ResponsiveContainer>
@@ -129,8 +130,8 @@ function BalancoPage() {
                     <YAxis fontSize={12} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="injetada" name="Injetada" fill="var(--chart-1)" />
-                    <Bar dataKey="perdas" name="Perdas" fill="var(--chart-2)" />
+                    <Bar dataKey="injetada" name={t("Injetada")} fill="var(--chart-1)" />
+                    <Bar dataKey="perdas" name={t(grafico.completa ? metodologia === "regulatorio" && manual === undefined ? "Perdas regulatórias" : "Diferença registrada" : "Perdas")} fill="var(--chart-2)" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

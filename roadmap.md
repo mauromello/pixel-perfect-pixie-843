@@ -1,7 +1,7 @@
 # Initial-screen energy balance
-- [ ] Connect live hierarchy, selected-node KPIs and methodology/manual PT to the calculation engine.
-- [ ] Read six-month measured history without inventing missing months; remove unused mock balance/tree.
-- [ ] Test regional feeder aggregation and verify selection, methodology and manual PT in the browser.
+- [x] Connect live hierarchy, selected-node KPIs and methodology/manual PT to the calculation engine.
+- [x] Read six-month measured history without inventing missing months; remove unused mock balance/tree.
+- [x] Test regional feeder aggregation and verify selection, methodology and manual PT in the browser.
 
 # Historical data audits
 - [x] Resolve the missing test-17 per-element historical-series prerequisite with the user; store 36 fictitious months and add installation meter/transformer links and transformer classes.

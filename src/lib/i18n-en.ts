@@ -2,6 +2,11 @@
 // "#" stands for any number inside the text (see traduzir in i18n.ts).
 export const EN_TELAS: Record<string, string> = {
   "PT manual (%)": "Manual technical loss (%)",
+  "Perdas Técnicas": "Technical losses",
+  "Perdas Não Técnicas": "Non-technical losses",
+  "Histórico: injeção e consumo registrados; não inclui todos os fluxos direcionais do balanço atual.": "History: recorded injection and consumption; does not include all directional flows in the current balance.",
+  "Perdas regulatórias": "Regulatory losses",
+  "Diferença registrada": "Recorded difference",
   "Automática": "Automatic",
   "Restaurar PT automática": "Restore automatic technical loss",
   "Informe uma PT entre 0% e 100%.": "Enter a technical loss between 0% and 100%.",
