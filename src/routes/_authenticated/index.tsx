@@ -62,15 +62,17 @@ function BalancoPage() {
   const ses = useRede(s => s.subestacoes);
   const chaves = useRede(s => s.chaves);
   const metodologia = useRede(s => s.metodologia);
+  const competencia = useRede(s => s.competencia);
+  const setCompetencia = useRede(s => s.setCompetencia);
   const arvore = useMemo(() => arvoreRede(ses, chaves), [ses, chaves]);
   const [sel, setSel] = useState<Node>(arvore);
   const selecionado = encontrarNo(arvore, sel.id) ?? arvore;
-  const historico = useQuery(historicoQuery(sessao.id, "2026-09-01"));
+  const historico = useQuery(historicoQuery(sessao.id, `${competencia}-01`));
   const parametros = useQuery(parametrosCriticasQuery(sessao.id));
   const achados = useMemo(() => {
     const ids = new Set(idsNo(selecionado));
-    return auditar(ses, { serie: historico.data ?? [], competencia: "2026-09-01", parametros: parametros.data ?? [], historicoDisponivel: historico.isSuccess, chaves }).filter(a => selecionado.id === "root" || (a.elementoId && ids.has(a.elementoId)));
-  }, [ses, chaves, selecionado, historico.data, historico.isSuccess, parametros.data]);
+    return auditar(ses, { serie: historico.data ?? [], competencia: `${competencia}-01`, parametros: parametros.data ?? [], historicoDisponivel: historico.isSuccess, chaves }).filter(a => selecionado.id === "root" || (a.elementoId && ids.has(a.elementoId)));
+  }, [ses, chaves, selecionado, historico.data, historico.isSuccess, parametros.data, competencia]);
   const [ptManual, setPtManual] = useState("");
   const [msg, setMsg] = useState("");
   const [rel, setRel] = useState(false);
@@ -78,7 +80,11 @@ function BalancoPage() {
   const manual = ptManual.trim() === "" ? undefined : Number(ptManual);
   const manualValida = manual === undefined || (Number.isFinite(manual) && manual >= 0 && manual <= 100);
   const b = useMemo(() => balancoNo(ses, idsNo(selecionado), metodologia, manualValida ? manual : undefined), [ses, selecionado, metodologia, manual, manualValida]);
-  const grafico = useMemo(() => serieBalancoNo(b, historico.data ?? [], mesesAnteriores("2026-09-01", 6).reverse(), metodologia, manualValida ? manual : undefined), [b, historico.data, metodologia, manual, manualValida]);
+  const grafico = useMemo(() => {
+    const g = serieBalancoNo(b, historico.data ?? [], mesesAnteriores(`${competencia}-01`, 6).reverse(), metodologia, manualValida ? manual : undefined);
+    if (ses.some(s => s.alimentadores.some(f => f.regrasCompetencia?.competencia === competencia && b.fontes.some(x => x.id === f.id)))) return { ...g, serie: g.serie.map(r => r.mes === competencia ? { ...r, injetada: b.injetada, perdas: b.pt + b.pnt } : r) };
+    return g;
+  }, [b, historico.data, metodologia, manual, manualValida, competencia, ses]);
   const ptPct = b.injetada ? b.pt / b.injetada * 100 : 0;
   const pntPct = b.injetada ? b.pnt / b.injetada * 100 : 0;
 
@@ -111,6 +117,7 @@ function BalancoPage() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm">
+            <label className="flex items-center gap-2">{t("Competência")}<input aria-label={t("Competência")} className="inp" type="month" value={competencia} onChange={e => { if (e.target.value) setCompetencia(e.target.value); }} /></label>
             <label className="flex items-center gap-2">{t("PT manual (%)")}<input aria-label={t("PT manual (%)")} className="inp w-28" type="number" min="0" max="100" step="0.1" placeholder={t("Automática")} value={ptManual} onChange={e => setPtManual(e.target.value)} /></label>
             {ptManual && <Button variant="ghost" size="sm" onClick={() => setPtManual("")}>{t("Restaurar PT automática")}</Button>}
             {!manualValida && <span role="alert" className="text-destructive">{t("Informe uma PT entre 0% e 100%.")}</span>}
@@ -150,7 +157,7 @@ function BalancoPage() {
           <PerdasNiveis />
 
 
-          <p className="text-xs text-muted-foreground">Dados de demonstração — série mensal fictícia e limiares ilustrativos, não homologados pela CEMIG. Competência: 2026-09.</p>
+          <p className="text-xs text-muted-foreground">{t("Dados de demonstração — série mensal fictícia e limiares ilustrativos, não homologados pela CEMIG.")} {t("Competência")}: {competencia}.</p>
           {(historico.isPending || parametros.isPending) && <p role="status">Carregando série histórica…</p>}
           {(historico.isError || parametros.isError) && <p role="alert" className="text-destructive">Não foi possível carregar histórico ou parâmetros; regras dependentes não foram executadas.</p>}
           <AchadosAuditoria achados={achados} />

@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/AppShell";
 import { useRede } from "@/lib/network-store";
 import { SubBalancos } from "@/components/SubBalancos";
 import { MedicoesCriticas } from "@/components/MedicoesCriticas";
+import { RegrasCemig } from "@/components/RegrasCemig";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { fatorPerdas, balancoAlimentador } from "@/lib/calculationEngine";
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/metodologia")({
   component: MetodologiaPage,
 });
 
-const ABAS = ["Motores e Equações", "Sub-balanços Geoelétricos", "Gap Regulatório e Tarifa", "Medições e Críticas"] as const;
+const ABAS = ["Motores e Equações", "Sub-balanços Geoelétricos", "Gap Regulatório e Tarifa", "Medições e Críticas", "Regras CEMIG"] as const;
 const fmt = (n: number, d = 0) => n.toLocaleString("pt-BR", { maximumFractionDigits: d, minimumFractionDigits: d });
 
 function MetodologiaPage() {
@@ -137,6 +138,7 @@ function MetodologiaPage() {
       )}
 
       {aba === "Medições e Críticas" && <MedicoesCriticas />}
+      {aba === "Regras CEMIG" && <RegrasCemig />}
     </div>
   );
 }
