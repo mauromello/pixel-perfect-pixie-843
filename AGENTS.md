@@ -19,3 +19,5 @@
 - UI translation uses `src/lib/i18n.ts` (`useT()`), keyed by the Portuguese text with fallback to Portuguese, so untranslated screens keep working while coverage grows.
 - Login requirement is a global flag in the `configuracao` table (anon-readable, admin-only update) read by the `_authenticated` gate via `src/lib/configAcesso.ts`; when off, visitors get a full-access evaluator session so evaluators need no account.
 - AI analytics scoring, precision/recall and anomaly detection live in `src/lib/analytics.ts` (pure, tested), derived from `tematicos` indicators so analytics stays tied to the network model.
+- Geo-electric area calculations live in the pure, tested `src/lib/metodologia.ts`; boundary meters belong to the shared substation model, with directional readings and stable endpoint IDs, so area boundaries follow the same network after switching.
+- Saved geo-electric areas use the browser's generated database client and database-enforced role policies; evaluator sessions cannot persist areas because they are not authenticated database users.
