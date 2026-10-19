@@ -9,7 +9,7 @@ import { COLUNAS_DICIONARIO, exportarDicionarioCSV, filtrarDicionario, type Entr
 import { useT } from "@/lib/i18n";
 
 const auth = getRouteApi("/_authenticated");
-const rotulos = { grupo: "Grupo", entidade: "Entidade", variavel: "Variável", tipo: "Tipo", unidade: "Unidade", nivel_hierarquia: "Nível hierárquico", sistema_origem: "Sistema de origem", periodicidade: "Periodicidade", obrigatoria: "Obrigatória", chave: "Chave", regra_critica: "Regra crítica", descricao: "Descrição" };
+const rotulos = { grupo: "Grupo", entidade: "Entidade", variavel: "Variável", tipo: "Tipo", unidade: "Unidade", nivel_hierarquia: "Nível hierárquico", sistema_origem: "Sistema de origem", periodicidade: "Periodicidade", obrigatoria: "Obrigatória", chave: "Chave de identificação", regra_critica: "Regra crítica", descricao: "Descrição" };
 export function DicionarioDados() {
   const t = useT();
   const { sessao } = auth.useRouteContext();
@@ -48,14 +48,14 @@ export function DicionarioDados() {
     {data.erro && <p role="alert" className="p-3 text-destructive">{t("Não foi possível carregar o dicionário.")}</p>}
     {mensagem && <p role="status" className="px-3 pb-3 text-sm">{t(mensagem)}</p>}
     <div className="max-h-[620px] overflow-auto">
-      <table className="tbl"><thead><tr>{COLUNAS_DICIONARIO.map(k => <th key={k}>{t(rotulos[k])}</th>)}{admin && <th>{t("Ações")}</th>}</tr></thead>
+      <table className="tbl"><thead className="sticky top-0 z-10 bg-muted"><tr>{COLUNAS_DICIONARIO.map(k => <th key={k}>{t(rotulos[k])}</th>)}{admin && <th className="sticky right-0 bg-muted">{t("Ações")}</th>}</tr></thead>
         <tbody>{lista.map(r => {
           const edit = edicao?.original.entidade === r.entidade && edicao.original.variavel === r.variavel;
           return <tr key={`${r.entidade}:${r.variavel}`}>
             {COLUNAS_DICIONARIO.map(k => <td key={k} className={k === "variavel" ? "font-mono text-primary" : ""}>
               {edit && edicao ? typeof r[k] === "boolean" ? <input aria-label={t(rotulos[k])} type="checkbox" checked={Boolean(edicao.draft[k])} disabled={mut.isPending} onChange={e => setEdicao({ ...edicao, draft: { ...edicao.draft, [k]: e.target.checked } })} /> : <input aria-label={t(rotulos[k])} className="inp w-40" value={String(edicao.draft[k])} disabled={mut.isPending || k === "entidade" || k === "variavel"} onChange={e => setEdicao({ ...edicao, draft: { ...edicao.draft, [k]: e.target.value } })} /> : typeof r[k] === "boolean" ? t(r[k] ? "Sim" : "Não") : <span className="block max-w-80 whitespace-normal">{k === "entidade" || k === "variavel" || k === "tipo" ? String(r[k]) : t(String(r[k]))}</span>}
             </td>)}
-            {admin && <td><div className="flex gap-1">{edit && edicao ? <><Button size="icon" variant="outline" title={t("Salvar")} aria-label={t("Salvar")} disabled={mut.isPending || !edicao.draft.grupo.trim() || !edicao.draft.tipo.trim()} onClick={() => mut.mutate(edicao)}><Save /></Button><Button size="icon" variant="outline" title={t("Cancelar")} aria-label={t("Cancelar")} disabled={mut.isPending} onClick={() => setEdicao(null)}><X /></Button></> : <Button size="icon" variant="outline" title={t("Editar")} aria-label={`${t("Editar")} ${r.entidade}.${r.variavel}`} disabled={edicao !== null} onClick={() => { setMensagem(""); setEdicao({ original: r, draft: { ...r } }); }}><Pencil /></Button>}</div></td>}
+            {admin && <td className="sticky right-0 bg-background"><div className="flex gap-1">{edit && edicao ? <><Button size="icon" variant="outline" title={t("Salvar")} aria-label={t("Salvar")} disabled={mut.isPending || !edicao.draft.grupo.trim() || !edicao.draft.tipo.trim()} onClick={() => mut.mutate(edicao)}><Save /></Button><Button size="icon" variant="outline" title={t("Cancelar")} aria-label={t("Cancelar")} disabled={mut.isPending} onClick={() => setEdicao(null)}><X /></Button></> : <Button size="icon" variant="outline" title={t("Editar")} aria-label={`${t("Editar")} ${r.entidade}.${r.variavel}`} disabled={edicao !== null} onClick={() => { setMensagem(""); setEdicao({ original: r, draft: { ...r } }); }}><Pencil /></Button>}</div></td>}
           </tr>;
         })}{!lista.length && sessao.id !== "avaliador" && !data.erro && <tr><td colSpan={13}>{t("Nenhuma variável encontrada.")}</td></tr>}</tbody>
       </table>

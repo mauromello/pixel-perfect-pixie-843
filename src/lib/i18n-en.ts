@@ -2,6 +2,7 @@
 // "#" stands for any number inside the text (see traduzir in i18n.ts).
 export const EN_TELAS: Record<string, string> = {
   "Dicionário de Dados — Extrações CEMIG": "Data Dictionary — CEMIG Extracts",
+  "Chave de identificação": "Identification key",
   "Editar": "Edit", "Salvar": "Save", "Cancelar": "Cancel", "Atualizar": "Refresh", "Exportar CSV": "Export CSV",
   "Grupo": "Group", "Entidade": "Entity", "Nível hierárquico": "Hierarchy level", "Sistema de origem": "Source system",
   "Periodicidade": "Frequency", "Obrigatória": "Required", "Regra crítica": "Validation rule", "Todos os grupos": "All groups",

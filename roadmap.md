@@ -1,9 +1,9 @@
 # Extraction data dictionary
-- [ ] Create role-protected dictionary storage and versioned schema.
-- [ ] Document actual network, database and scenario fields; explicitly identify missing entities.
-- [ ] Seed the database from the maintained source catalogue.
-- [ ] Add group/search filters, admin inline editing and CSV export on Settings only.
-- [ ] Test field coverage and verify authenticated editing/export end to end.
+- [x] Create role-protected dictionary storage and versioned schema.
+- [x] Document actual network, database and scenario fields; explicitly identify missing entities.
+- [x] Seed the database from the maintained source catalogue.
+- [x] Add group/search filters, admin inline editing and CSV export on Settings only.
+- [x] Test field coverage and verify authenticated editing/export end to end.
 
 # Analytical technical losses
 - [x] Apply and test editable analytical factors without changing trunk current.
