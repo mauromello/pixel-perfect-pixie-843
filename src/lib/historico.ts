@@ -56,12 +56,24 @@ export function arvoreRede(ses: Subestacao[], chaves: Chave[] = []): NoRede {
     id: `regional:${regional}`, nome: regional, tipo: "Regional", filhos: [...new Set(ses.filter(s => s.regional === regional).map(s => s.municipio))].map(municipio => ({
       id: `municipio:${regional}:${municipio}`, nome: municipio, tipo: "Município", filhos: ses.filter(s => s.regional === regional && s.municipio === municipio).map(s => ({
         id: s.id, nome: s.nome, tipo: "SE", filhos: [...(s.medidoresFronteira ?? []).map(m => ({ id: m.id, nome: m.nome, tipo: "Medidor" })), ...s.alimentadores.map(f => ({ id: f.id, nome: f.cod, tipo: "Alimentador", filhos: [
-          ...chaves.filter(c => c.alimentadorId === f.id).map(c => ({ id: c.id, nome: c.cod, tipo: c.tipo === "religador" ? "Religador" : "Chave" })),
-          ...f.trafos.map(t => ({ id: t.id, nome: t.nome, tipo: "Trafo", filhos: t.clientes.map(c => ({ id: c.id, nome: c.nome, tipo: "Instalação", filhos: c.medidor ? [{ id: c.medidor.id, nome: c.medidor.numero, tipo: "Medidor" }] : [] })) })),
+          ...filhosAlimentador(f, chaves),
         ] }))],
       })),
     })),
   })) };
+}
+/** Each transformer belongs to its nearest upstream real recloser, never a fabricated level. */
+function filhosAlimentador(f: Subestacao["alimentadores"][number], chaves: Chave[]): NoRede[] {
+  const religadores = chaves.filter(c => c.alimentadorId === f.id && c.tipo === "religador" && f.segmentos.some(g => g.id === c.segmentoId));
+  const donos = new Map<string, string>();
+  for (const t of f.trafos) {
+    const indice = f.segmentos.findIndex(g => g.id === t.segmentoId);
+    const dono = religadores.filter(c => f.segmentos.findIndex(g => g.id === c.segmentoId) <= indice)
+      .sort((a, b) => f.segmentos.findIndex(g => g.id === b.segmentoId) - f.segmentos.findIndex(g => g.id === a.segmentoId))[0];
+    if (dono) donos.set(t.id, dono.id);
+  }
+  const noTrafo = (t: typeof f.trafos[number]): NoRede => ({ id: t.id, nome: t.nome, tipo: "Trafo", filhos: t.clientes.map(c => ({ id: c.id, nome: c.nome, tipo: "Instalação" })) });
+  return [...religadores.map(c => ({ id: c.id, nome: c.cod, tipo: "Religador", filhos: f.trafos.filter(t => donos.get(t.id) === c.id).map(noTrafo) })), ...f.trafos.filter(t => !donos.has(t.id)).map(noTrafo)];
 }
 export function idsNo(no: NoRede): string[] { return [no.id, ...(no.filhos ?? []).flatMap(idsNo)]; }
 export function encontrarNo(no: NoRede, id: string): NoRede | undefined {
