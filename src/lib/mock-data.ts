@@ -1,76 +1,7 @@
-export type Node = {
-  id: string;
-  nome: string;
-  tipo: "Distribuidora" | "Regional" | "Município" | "SE" | "Alimentador" | "Religador" | "Trafo" | "Medidor" | "Instalação";
-  filhos?: Node[] | undefined;
-};
-
-// Rede fictícia de Minas Gerais: Regional -> Município -> Subestações
-const redeMG: Record<string, Record<string, string[]>> = {
-  Metropolitana: { "Belo Horizonte": ["SE Taquaril", "SE Neves"], Contagem: ["SE Contagem"] },
-  Triângulo: { Uberlândia: ["SE Uberlândia-Centro", "SE Uberlândia-Sul"], Uberaba: ["SE Uberaba 1"] },
-  Norte: { "Montes Claros": ["SE Montes Claros 1", "SE Montes Claros 2"] },
-  Sul: { Varginha: ["SE Varginha"], "Pouso Alegre": ["SE Pouso Alegre"] },
-  "Zona da Mata": { "Juiz de Fora": ["SE Juiz de Fora 1", "SE Juiz de Fora 4"] },
-};
-
-const sigla = (se: string) => se.replace("SE ", "").replace(/[^A-Za-zÀ-ú0-9]/g, "").slice(0, 3).toUpperCase();
-
-function cadeia(prefix: string, cod: string): Node[] {
-  return [1, 2].map((a) => {
-    const al = `${cod}-AL0${a}`;
-    const id = `${prefix}-a${a}`;
-    return {
-      id, nome: al, tipo: "Alimentador",
-      filhos: [{
-        id: `${id}-r`, nome: `RL-${cod}${a}01`, tipo: "Religador",
-        filhos: [{
-          id: `${id}-t`, nome: `TR-${cod}-${4500 + a}`, tipo: "Trafo",
-          filhos: [{
-            id: `${id}-m`, nome: `MD-${88000 + a * 17}`, tipo: "Medidor",
-            filhos: [{ id: `${id}-i`, nome: `UC ${3000 + a * 11}`, tipo: "Instalação" }],
-          }],
-        }],
-      }],
-    } as Node;
-  });
-}
-
-export const arvore: Node = {
-  id: "root", nome: "Distribuidora MG", tipo: "Distribuidora",
-  filhos: Object.entries(redeMG).map(([reg, munis], ri) => ({
-    id: `r${ri}`, nome: `Regional ${reg}`, tipo: "Regional",
-    filhos: Object.entries(munis).map(([mun, ses], mi) => ({
-      id: `r${ri}m${mi}`, nome: mun, tipo: "Município",
-      filhos: ses.map((se, si) => ({ id: `r${ri}m${mi}s${si}`, nome: se, tipo: "SE", filhos: cadeia(`r${ri}m${mi}s${si}`, sigla(se)) })),
-    })),
-  })) as Node[],
-};
-
 export function hash(s: string) {
   let h = 0;
   for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 100000;
   return h;
-}
-
-export function balanco(id: string) {
-  const h = hash(id);
-  const injetada = id === "root" ? 2_184_500 : 2000 + (h % 90000);
-  const pt = 0.06 + (h % 30) / 1000;
-  const pnt = 0.04 + (h % 70) / 1000;
-  return {
-    injetada,
-    faturada: Math.round(injetada * (1 - pt - pnt)),
-    pt: Math.round(injetada * pt),
-    pnt: Math.round(injetada * pnt),
-    ptPct: pt * 100,
-    pntPct: pnt * 100,
-    serie: ["Mai", "Jun", "Jul", "Ago", "Set", "Out"].map((m, i) => ({
-      mes: m,
-      injetada: Math.round(injetada * (0.92 + ((h + i * 7) % 15) / 100)),
-      perdas: Math.round(injetada * (pt + pnt) * (0.9 + ((h + i * 3) % 20) / 100)),
-    })),
-  };
 }
 
 export const fontesBalanco = [
