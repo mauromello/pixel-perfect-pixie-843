@@ -11,10 +11,14 @@ export function fatorPerdas(p: ParametrosPerda) {
 }
 
 export type TipoCliente = "cativo" | "livre" | "gd";
+export type MedidorInstalacao = { id: string; numero: string; tecnologia: "AMI" | "Convencional"; tipo: "bidirecional" | "consumo" };
 export type Cliente = {
   id: string;
   nome: string;
   tipo: TipoCliente;
+  trafoId?: string | null;
+  medidor?: MedidorInstalacao | null;
+  cargaKva?: number;
   /** Registrador de importação (energia consumida da rede) */
   importacao: number;
   /** Registrador de exportação (somente GD) — NUNCA compensado com a importação */
@@ -23,6 +27,7 @@ export type Cliente = {
 export type Condutor = { r: number; comprimento: number; corrente: number }; // Ω/km, km, A
 /** PowerTransformer de distribuição MT/BT */
 export type Trafo = {
+  classe?: "Residencial" | "Comercial" | "Rural" | "Poder Público" | "Industrial BT";
   id: string; nome: string; p0: number; pcu: number; srated: number; // kW, kW, kVA
   segmentoId: string; lat: number; lng: number; tensaoPrimKV: number; tensaoSecV: number;
   clientes: Cliente[];
