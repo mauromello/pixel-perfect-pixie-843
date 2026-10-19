@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      areas_subbalanco: {
+        Row: {
+          criado_em: string
+          descricao: string
+          elementos: Json
+          id: string
+          nome: string
+          usuario_id: string
+        }
+        Insert: {
+          criado_em?: string
+          descricao?: string
+          elementos?: Json
+          id?: string
+          nome: string
+          usuario_id?: string
+        }
+        Update: {
+          criado_em?: string
+          descricao?: string
+          elementos?: Json
+          id?: string
+          nome?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       configuracao: {
         Row: {
           exigir_login: boolean
