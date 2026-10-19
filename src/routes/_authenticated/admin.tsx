@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { DicionarioDados } from "@/components/DicionarioDados";
 import { dicionarioQuery } from "@/lib/dicionarioDados";
 import { GestaoUsuarios } from "@/components/GestaoUsuarios";
