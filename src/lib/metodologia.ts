@@ -191,10 +191,10 @@ export function gapPorSE(ses: Subestacao[], tarifa: number) {
 
 export const CAMADAS = ["Raw (bruta)", "Coletada", "Validada", "Ajustada", "CCEE", "Faturada"] as const;
 export type Severidade = "Alta" | "Média" | "Baixa";
-export type Achado = { regra: string; elemento: string; descricao: string; severidade: Severidade };
+export type Achado = { regra: string; elemento: string; descricao: string; severidade: Severidade; elementoId?: string; competencia?: string; valorMedido?: number | null; valorReferencia?: number | null; variacaoHistorica?: number | null };
 
 /** 8 regras de auditoria de medição aplicadas ao modelo de rede. */
-export function auditar(ses: Subestacao[]): Achado[] {
+export function auditar(ses: Subestacao[], contexto?: ContextoAuditoria): Achado[] {
   const out: Achado[] = [];
   for (const s of ses) for (const f of s.alimentadores) {
     const b = balancoAlimentador(f);
@@ -207,9 +207,17 @@ export function auditar(ses: Subestacao[]): Achado[] {
     if (pct > 35) out.push({ regra: "5. Multiplicadores TC/TP", elemento: el, descricao: `Perda ${pct.toFixed(1)}% sugere fator de multiplicação incorreto`, severidade: "Alta" });
     if (f.trafos.some((t) => t.clientes.some((c) => c.tipo === "livre" && c.importacao <= 0))) out.push({ regra: "6. Integração ACL", elemento: el, descricao: "Consumidor livre sem medição CCEE", severidade: "Média" });
     if (b.geracaoEmbutida > 0 && b.geracaoEmbutida > f.entradaDisjuntor) out.push({ regra: "7. Não-compensação de GD", elemento: el, descricao: "Exportação GD superior à entrada (verificar fluxo reverso)", severidade: "Média" });
-    if (pct > 20 && pct <= 35) out.push({ regra: "8. Degrau histórico", elemento: el, descricao: `Perda ${pct.toFixed(1)}% fora da faixa típica`, severidade: "Baixa" });
+    if (pct > 20 && pct <= 35) out.push({ regra: "8. Faixa de perdas", elemento: el, descricao: `Perda ${pct.toFixed(1)}% fora da faixa típica`, severidade: "Baixa" });
   }
-  return out;
+  for (const a of out) {
+    const f = ses.flatMap(s => s.alimentadores).find(f => a.elemento.endsWith(` / ${f.cod}`));
+    a.elementoId = f?.id;
+    a.competencia = contexto?.competencia;
+    a.valorMedido = f ? balancoAlimentador(f).lTotal : null;
+    a.valorReferencia = null;
+    a.variacaoHistorica = f && contexto ? variacaoHistorica(contexto.serie, f.id, contexto.competencia, "energia_injetada")?.percentual ?? null : null;
+  }
+  return contexto ? [...out, ...auditarContexto(ses, contexto)] : out;
 }
 
 /** Saúde por camada: % de alimentadores sem achados graves que alcançam a camada. */
