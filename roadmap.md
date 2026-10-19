@@ -1,3 +1,9 @@
+# Historical data audits
+- [ ] Resolve the missing test-17 per-element historical-series prerequisite with the user.
+- [ ] Implement temporal and installation consistency audit rules with tests.
+- [ ] Add admin-managed thresholds and detailed findings to Measurements and Data Checks.
+- [ ] Replace initial-screen fixed findings with selected-node audits and historical variation.
+
 # Extraction data dictionary
 - [x] Create role-protected dictionary storage and versioned schema.
 - [x] Document actual network, database and scenario fields; explicitly identify missing entities.
