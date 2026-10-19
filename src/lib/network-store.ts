@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { manobrar, HORAS_CICLO, FATOR_CARGA_TRAFO, type Alimentador, type Chave, type Cliente, type Condutor, type Coord, type Metodologia, type Segmento, type Subestacao, type Trafo } from "./calculationEngine";
+import { manobrar, HORAS_CICLO, FATOR_CARGA_TRAFO, PARAMETROS_PERDA_PADRAO, validarParametrosPerda, type ParametrosPerda, type Alimentador, type Chave, type Cliente, type Condutor, type Coord, type Metodologia, type Segmento, type Subestacao, type Trafo } from "./calculationEngine";
 
 let seq = 1000;
 const uid = (p: string) => `${p}${++seq}`;
@@ -145,6 +145,11 @@ const mapTr = (ses: Subestacao[], trId: string, fn: (t: Trafo) => Trafo) =>
 export type RegistroManobra = { id: number; tie: string; sec: string; origem: string; destino: string; segmentos: number; trafos: number; energia: number; correnteDestino: number; ampacidade: number; quando: string };
 
 type State = {
+  parametrosPerda: ParametrosPerda;
+  motorPT: "analitico" | "importado";
+  setParametrosPerda: (p: ParametrosPerda) => void;
+  setMotorPT: (m: "analitico" | "importado") => void;
+  importarPT: (valores: Record<string, number>) => void;
   subestacoes: Subestacao[];
   chaves: Chave[];
   /** Estado normal da rede antes das manobras (para desfazer) */
@@ -168,6 +173,21 @@ type State = {
 
 const d0 = demo();
 export const useRede = create<State>((set, get) => ({
+  parametrosPerda: { ...PARAMETROS_PERDA_PADRAO },
+  motorPT: "analitico",
+  setParametrosPerda: (p) => {
+    if (!validarParametrosPerda(p)) return;
+    set(s => ({ parametrosPerda: { ...p }, subestacoes: s.subestacoes.map(se => ({ ...se, alimentadores: se.alimentadores.map(f => ({ ...f, parametrosPerda: { ...p } })) })), base: s.base ? { ...s.base, subestacoes: s.base.subestacoes.map(se => ({ ...se, alimentadores: se.alimentadores.map(f => ({ ...f, parametrosPerda: { ...p } })) })) } : null }));
+  },
+  setMotorPT: (m) => set(s => ({ motorPT: m, subestacoes: s.subestacoes.map(se => ({ ...se, alimentadores: se.alimentadores.map(f => ({ ...f, motorPT: m })) })), base: s.base ? { ...s.base, subestacoes: s.base.subestacoes.map(se => ({ ...se, alimentadores: se.alimentadores.map(f => ({ ...f, motorPT: m })) })) } : null })),
+  importarPT: (valores) => set(s => {
+    const aplicar = (ses: Subestacao[]) => ses.map(se => ({ ...se, alimentadores: se.alimentadores.map(f => {
+      const { ptImportada: anterior, ...resto } = f;
+      const valor = valores[f.cod];
+      return { ...resto, motorPT: "importado" as const, ...(valor !== undefined ? { ptImportada: valor } : {}) };
+    }) }));
+    return { motorPT: "importado", subestacoes: aplicar(s.subestacoes), base: s.base ? { ...s.base, subestacoes: aplicar(s.base.subestacoes) } : null };
+  }),
   subestacoes: d0.subestacoes,
   chaves: d0.chaves,
   base: null,
@@ -195,6 +215,6 @@ export const useRede = create<State>((set, get) => ({
     return null;
   },
   desfazerManobras: () => set((s) => (s.base ? { ...s.base, base: null, manobras: [] } : {})),
-  carregarModelo: (m, origemModelo) => set({ ...m, base: null, manobras: [], origemModelo }),
-  restaurarDemo: () => { const d = demo(); set({ ...d, base: null, manobras: [], origemModelo: "Rede demonstrativa (dados fictícios)" }); },
+  carregarModelo: (m, origemModelo) => set({ ...m, parametrosPerda: { ...PARAMETROS_PERDA_PADRAO }, motorPT: "analitico", base: null, manobras: [], origemModelo }),
+  restaurarDemo: () => { const d = demo(); set({ ...d, parametrosPerda: { ...PARAMETROS_PERDA_PADRAO }, motorPT: "analitico", base: null, manobras: [], origemModelo: "Rede demonstrativa (dados fictícios)" }); },
 }));

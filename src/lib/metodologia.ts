@@ -1,19 +1,42 @@
 // Metodologia e Cálculo (Anexo II itens 1, 2, 4, 8, 10). Pura e testada.
-import { balancoAlimentador, perdaTecnica, HORAS_CICLO, FATOR_CARGA_TRAFO, type Chave, type Alimentador, type Subestacao } from "./calculationEngine";
+import { balancoAlimentador, perdaTecnica, perdaTecnicaAnalitica, perdaTecnicaTrafo, type Chave, type Alimentador, type Subestacao } from "./calculationEngine";
 
-export type Motor = "analitico" | "parametrizado" | "regulatorio";
+export type Motor = "analitico" | "parametrizado" | "regulatorio" | "importado";
 export const MOTORES: { id: Motor; nome: string; desc: string }[] = [
-  { id: "analitico", nome: "A — Analítico (PRODIST Módulo 7)", desc: "MT: 3·R·I²·L·Δt; BT: (P0 + Pcu·FC²)·Δt; AT: sobra da SE" },
+  { id: "analitico", nome: "A — Analítico (PRODIST Módulo 7)", desc: "MT: 3·R·I²·L·Δt·Fd·Fp; Fp = a·FC + (1−a)·FC²; BT: (P0 + Pcu·FC²)·Δt; AT: sobra da SE" },
   { id: "parametrizado", nome: "B — Parametrizado (% informado)", desc: "PT = Entrada líquida × % informado por nível" },
   { id: "regulatorio", nome: "C — Regulatório / IPTD (PRORET 2.6)", desc: "PT e PNT = Entrada líquida × metas homologadas" },
+  { id: "importado", nome: "D — PT importada (PERTEC PLUS)", desc: "PT = CSV por alimentador; sem linha: motor analítico" },
 ];
 
 /** Perda técnica de um alimentador segundo o motor escolhido (MWh). */
 export function perdaTecnicaMotor(f: Alimentador, motor: Motor, pctManual: number, alvoPT: number): number {
   const b = balancoAlimentador(f);
-  if (motor === "analitico") return perdaTecnica(f).total;
+  if (motor === "analitico") return perdaTecnicaAnalitica(f).total;
+  if (motor === "importado") return perdaTecnica({ ...f, motorPT: "importado" }).total;
   const pct = motor === "parametrizado" ? pctManual : alvoPT;
   return (b.entradaLiquida * pct) / 100;
+}
+
+/** Strict semicolon CSV; reject ambiguous or invalid rows before changing the model. */
+export function importarPertecCSV(texto: string, codigos: string[]) {
+  const linhas = texto.replace(/^\uFEFF/, "").trim().split(/\r?\n/);
+  if (linhas[0]?.trim() !== "cod_alimentador;pt_mwh") throw new Error("Cabeçalho esperado: cod_alimentador;pt_mwh.");
+  const valores: Record<string, number> = {};
+  const desconhecidos: string[] = [];
+  const vistos = new Set<string>();
+  for (const linha of linhas.slice(1)) {
+    if (!linha.trim()) continue;
+    const campos = linha.split(";").map(c => c.trim());
+    const cod = campos[0]; const raw = campos[1];
+    if (campos.length !== 2 || !cod || !raw || !/^\d+(?:[.,]\d+)?$/.test(raw)) throw new Error("CSV inválido: informe código e PT não negativa em MWh.");
+    const pt = Number(raw.replace(",", "."));
+    if (!Number.isFinite(pt) || vistos.has(cod)) throw new Error("CSV inválido: valor não finito ou código duplicado.");
+    vistos.add(cod);
+    if (codigos.includes(cod)) valores[cod] = pt; else desconhecidos.push(cod);
+  }
+  if (!Object.keys(valores).length) throw new Error("Nenhum alimentador do arquivo existe no modelo.");
+  return { valores, desconhecidos };
 }
 
 export type ElementosArea = {
@@ -35,7 +58,14 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
   const ativos = selecionados.filter(m => Number.isFinite(m.energiaMWh) && Number.isFinite(m.reversaMWh) && m.energiaMWh >= 0 && m.reversaMWh >= 0 && m.origemId !== m.destinoId);
   selecionados.filter(m => !ativos.includes(m)).forEach(m => alertas.push(`Leitura inválida: ${m.nome}`));
   let entrada = 0, fornecida = 0, pt = 0;
-  const perdasTrafo = (t: Alimentador["trafos"][number]) => (t.p0 + t.pcu * FATOR_CARGA_TRAFO ** 2) * HORAS_CICLO / 1000;
+  const calculo = (f: Alimentador) => motor === "importado" ? perdaTecnica({ ...f, motorPT: "importado" }) : perdaTecnicaAnalitica(f);
+  const perdasTrafo = (t: Alimentador["trafos"][number]) => {
+    const f = ses.flatMap(s => s.alimentadores).find(f => f.trafos.some(tr => tr.id === t.id));
+    if (!f) return perdaTecnicaTrafo(t);
+    const a = perdaTecnicaAnalitica(f);
+    const escala = motor === "importado" && a.total > 0 ? calculo(f).total / a.total : 1;
+    return perdaTecnicaTrafo(t, f.parametrosPerda?.fc) * escala;
+  };
   const consumo = (t: Alimentador["trafos"][number]) => t.clientes.reduce((n,c) => n + c.importacao, 0);
   const geracao = (t: Alimentador["trafos"][number]) => t.clientes.reduce((n,c) => n + (c.tipo === "gd" ? c.exportacao : 0), 0);
   const cuts = new Map<string, number>();
@@ -67,7 +97,7 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
       const totalL = f.segmentos.reduce((n,g) => n + g.comprimento, 0);
       const keepL = f.segmentos.filter(g => dentro.has(g.id)).reduce((n,g) => n + g.comprimento, 0);
       const proporcao = totalL > 0 ? keepL / totalL : 1;
-      let tec = perdaTecnica(f).condutor * proporcao;
+      let tec = calculo(f).condutor * proporcao;
       const corte = cuts.get(f.id) ?? f.segmentos.length;
       const sgCorte = f.segmentos[corte];
       const jusante = new Set(f.segmentos.slice(corte).map(g => g.id));
@@ -80,7 +110,7 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
       if (corte < f.segmentos.length) {
         const c = chaves.find(c => area.chavesCorte.includes(c.id) && c.alimentadorId === f.id && c.segmentoId === f.segmentos[corte]?.id);
         const sg = sgCorte;
-        const perdaRemovida = perdaTecnica(f).condutor * (1 - proporcao);
+        const perdaRemovida = calculo(f).condutor * (1 - proporcao);
         const leituraCorte = sg ? ativos.some(m => m.origemId === sg.id || m.destinoId === sg.id) : false;
         if (sg && c && !leituraCorte) {
           const fluxo = removidos.filter(t => jusante.has(t.segmentoId)).reduce((n,t) => n + consumo(t) + perdasTrafo(t) - geracao(t), 0) + perdaRemovida;
@@ -92,9 +122,9 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
       const entradasExternas = ativos.filter(m => !dentro.has(m.origemId) && m.destinoId === f.id).reduce((n,m) => n + m.energiaMWh - m.reversaMWh, 0);
       const temExportacaoMedida = ativos.some(m => m.origemId === f.id && !f.trafos.some(t => t.id === m.destinoId) && !f.segmentos.some(g => g.id === m.destinoId));
       if (!temExportacaoMedida && f.exportacaoFronteira !== 0) adicionar(`residual-${f.id}`, f.cod, f.id, "exterior", f.exportacaoFronteira, "estimada");
-      if (motor === "analitico") pt += tec;
+      if (motor === "analitico" || motor === "importado") pt += tec;
       else {
-        const saidaArea = removidos.reduce((n,t) => n + consumo(t) + perdasTrafo(t) - geracao(t), 0) + perdaTecnica(f).condutor * (1 - proporcao);
+        const saidaArea = removidos.reduce((n,t) => n + consumo(t) + perdasTrafo(t) - geracao(t), 0) + calculo(f).condutor * (1 - proporcao);
         pt += (f.entradaDisjuntor + gd + entradasExternas - f.exportacaoFronteira - saidaArea) * (motor === "parametrizado" ? pctManual : s.alvoPT) / 100;
       }
     }
@@ -104,7 +134,7 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
       if (!full) {
         const medido = ativos.some(m => m.destinoId === t.id || m.origemId === t.id);
         if (!medido) adicionar(`entrada-${t.id}`, t.nome, f.id, t.id, consumo(t) + perdasTrafo(t) - geracao(t), "estimada");
-        pt += motor === "analitico" ? perdasTrafo(t) : (consumo(t) + perdasTrafo(t)) * (motor === "parametrizado" ? pctManual : s.alvoPT) / 100;
+        pt += motor === "analitico" || motor === "importado" ? perdasTrafo(t) : (consumo(t) + perdasTrafo(t)) * (motor === "parametrizado" ? pctManual : s.alvoPT) / 100;
       }
     }
   }
