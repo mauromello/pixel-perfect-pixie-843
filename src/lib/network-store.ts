@@ -124,6 +124,11 @@ function demo() {
     if (a.regional === b.regional) chaves.push(tie(a.alimentadores.at(-1)!, b.alimentadores[0]!));
   }
   for (const s of subestacoes) {
+    for (const f of s.alimentadores) for (const [i, t] of f.trafos.entries()) {
+      t.classe = (i % 3 === 0 ? "Rural" : i % 3 === 1 ? "Comercial" : "Residencial");
+      t.clientes = t.clientes.map(c => ({ ...c, trafoId: t.id, cargaKva: c.importacao * 1000 / HORAS_CICLO / 0.92,
+        medidor: { id: `md-${c.id}`, numero: `MD-${c.id}`, tecnologia: "AMI", tipo: c.tipo === "gd" ? "bidirecional" : "consumo" } }));
+    }
     s.medidoresFronteira = s.alimentadores.flatMap((f) => [
       { id: `mf-${f.id}`, nome: `MF-${f.cod}`, origemId: f.id, destinoId: "exterior", energiaMWh: f.exportacaoFronteira, reversaMWh: 0, fonte: "estimada" as const },
       ...f.trafos.map((t) => {
@@ -200,7 +205,7 @@ export const useRede = create<State>((set, get) => ({
   updCondutor: (id, p) => set((s) => ({ subestacoes: mapAl(s.subestacoes, id, (f) => ({ ...f, condutor: { ...f.condutor, ...p } })) })),
   updTrafo: (id, p) => set((s) => ({ subestacoes: mapTr(s.subestacoes, id, (t) => ({ ...t, ...p })) })),
   updChave: (id, p) => set((s) => ({ chaves: s.chaves.map((c) => (c.id === id ? { ...c, ...p } : c)) })),
-  addCliente: (trId, c) => set((s) => ({ subestacoes: mapTr(s.subestacoes, trId, (t) => ({ ...t, clientes: [...t.clientes, { ...c, id: uid("c") }] })) })),
+  addCliente: (trId, c) => set((s) => ({ subestacoes: mapTr(s.subestacoes, trId, (t) => ({ ...t, clientes: [...t.clientes, { ...c, trafoId: c.trafoId ?? trId, id: uid("c") }] })) })),
   removeCliente: (trId, cId) => set((s) => ({ subestacoes: mapTr(s.subestacoes, trId, (t) => ({ ...t, clientes: t.clientes.filter((c) => c.id !== cId) })) })),
   executarManobra: (tieId, secId) => {
     const st = get();

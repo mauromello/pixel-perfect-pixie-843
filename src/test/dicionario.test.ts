@@ -31,7 +31,8 @@ describe("dicionário de extrações", () => {
     expect(DICIONARIO_SEED.find(r => r.entidade === "MedidorFronteira" && r.variavel === "energiaMWh")?.unidade).toBe("MWh");
   });
   it("não oculta entidades ausentes nem anuncia integrações ativas", () => {
-    for (const ent of ["TrafoATMT", "Medidor", "ClimaDiario", "UsinaGC"]) expect(DICIONARIO_SEED.find(r => r.entidade === ent)?.tipo).toBe("ausente");
+    for (const ent of ["TrafoATMT", "ClimaDiario", "UsinaGC"]) expect(DICIONARIO_SEED.find(r => r.entidade === ent)?.tipo).toBe("ausente");
+    expect(DICIONARIO_SEED.find(r => r.entidade === "Medidor" && r.variavel === "numero")?.tipo).toBe("string");
   });
   it("cada par entidade/variável é único", () => {
     expect(new Set(DICIONARIO_SEED.map(r => `${r.entidade}.${r.variavel}`)).size).toBe(DICIONARIO_SEED.length);

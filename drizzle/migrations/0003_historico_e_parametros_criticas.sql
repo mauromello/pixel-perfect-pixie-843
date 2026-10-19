@@ -1,0 +1,16 @@
+CREATE TABLE public.serie_mensal (elemento_id text NOT NULL, competencia date NOT NULL, energia_injetada double precision, consumo_mwh double precision, carga_kva double precision, leitura_completa boolean NOT NULL DEFAULT true, demonstracao boolean NOT NULL DEFAULT true, PRIMARY KEY(elemento_id, competencia), CONSTRAINT competencia_mensal CHECK (extract(day from competencia)=1));
+GRANT SELECT ON public.serie_mensal TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.serie_mensal TO authenticated;
+GRANT ALL ON public.serie_mensal TO service_role;
+ALTER TABLE public.serie_mensal ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "historico autenticados leem" ON public.serie_mensal FOR SELECT TO authenticated USING (true);
+CREATE POLICY "historico avaliadores demo" ON public.serie_mensal FOR SELECT TO anon USING (demonstracao AND EXISTS(SELECT 1 FROM public.configuracao WHERE NOT exigir_login));
+CREATE POLICY "historico perfis gravam" ON public.serie_mensal FOR ALL TO authenticated USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'operador') OR public.has_role(auth.uid(),'planejamento')) WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'operador') OR public.has_role(auth.uid(),'planejamento'));
+CREATE INDEX serie_mensal_competencia ON public.serie_mensal(competencia);
+CREATE TABLE public.criticas_parametros (regra text NOT NULL, parametro text NOT NULL, valor double precision NOT NULL, PRIMARY KEY(regra,parametro), CONSTRAINT valor_valido CHECK(valor>=0 AND valor < 'Infinity'::double precision));
+GRANT SELECT ON public.criticas_parametros TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.criticas_parametros TO authenticated;
+GRANT ALL ON public.criticas_parametros TO service_role;
+ALTER TABLE public.criticas_parametros ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "parametros leem" ON public.criticas_parametros FOR SELECT TO anon,authenticated USING(true);
+CREATE POLICY "parametros admin grava" ON public.criticas_parametros FOR ALL TO authenticated USING(public.has_role(auth.uid(),'admin')) WITH CHECK(public.has_role(auth.uid(),'admin'));

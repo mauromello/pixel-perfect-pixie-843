@@ -1,12 +1,18 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { Link, createFileRoute, getRouteApi } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PageHeader } from "@/components/AppShell";
 import { PainelBalancoFisico } from "@/components/BalancoFisico";
 import { PerdasNiveis } from "@/components/PerdasNiveis";
 import { RelatorioBalanco } from "@/components/RelatorioBalanco";
-import { arvore, balanco, criticas, fontesBalanco, type Node } from "@/lib/mock-data";
+import { balanco, fontesBalanco } from "@/lib/mock-data";
+import { useRede } from "@/lib/network-store";
+import { arvoreRede, encontrarNo, idsNo, type NoRede as Node } from "@/lib/historico";
+import { auditar } from "@/lib/metodologia";
+import { historicoQuery, parametrosCriticasQuery } from "@/lib/auditoriaDados";
+import { AchadosAuditoria } from "@/components/AchadosAuditoria";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -45,15 +51,21 @@ function Tree({ node, sel, onSel, depth = 0 }: { node: Node; sel: string; onSel:
   );
 }
 
-const sevCls: Record<string, string> = {
-  Crítica: "bg-destructive text-destructive-foreground",
-  Alta: "bg-destructive/15 text-destructive",
-  Média: "bg-warning/25 text-accent-foreground",
-  Baixa: "bg-muted text-muted-foreground",
-};
+const auth = getRouteApi("/_authenticated");
 
 function BalancoPage() {
+  const { sessao } = auth.useRouteContext();
+  const ses = useRede(s => s.subestacoes);
+  const chaves = useRede(s => s.chaves);
+  const arvore = useMemo(() => arvoreRede(ses, chaves), [ses, chaves]);
   const [sel, setSel] = useState<Node>(arvore);
+  const selecionado = encontrarNo(arvore, sel.id) ?? arvore;
+  const historico = useQuery(historicoQuery(sessao.id, "2026-09-01"));
+  const parametros = useQuery(parametrosCriticasQuery(sessao.id));
+  const achados = useMemo(() => {
+    const ids = new Set(idsNo(selecionado));
+    return auditar(ses, { serie: historico.data ?? [], competencia: "2026-09-01", parametros: parametros.data ?? [], historicoDisponivel: historico.isSuccess, chaves }).filter(a => selecionado.id === "root" || (a.elementoId && ids.has(a.elementoId)));
+  }, [ses, chaves, selecionado, historico.data, historico.isSuccess, parametros.data]);
   const [ptManual, setPtManual] = useState("");
   const [msg, setMsg] = useState("");
   const [rel, setRel] = useState(false);
@@ -122,15 +134,10 @@ function BalancoPage() {
           <PerdasNiveis />
 
 
-          <div className="panel overflow-auto">
-            <div className="panel-h">Indicadores de Críticas de Dados</div>
-            <table className="tbl">
-              <thead><tr><th>Elemento</th><th>Tipo</th><th>Descrição</th><th>Var. histórico</th><th>Severidade</th></tr></thead>
-              <tbody>{criticas.map((c) => (
-                <tr key={c.id}><td>{c.elemento}</td><td>{c.tipo}</td><td>{c.descricao}</td><td className="font-mono">{c.variacao}</td><td><span className={`badge ${sevCls[c.severidade]}`}>{c.severidade}</span></td></tr>
-              ))}</tbody>
-            </table>
-          </div>
+          <p className="text-xs text-muted-foreground">Dados de demonstração — série mensal fictícia e limiares ilustrativos, não homologados pela CEMIG. Competência: 2026-09.</p>
+          {(historico.isPending || parametros.isPending) && <p role="status">Carregando série histórica…</p>}
+          {(historico.isError || parametros.isError) && <p role="alert" className="text-destructive">Não foi possível carregar histórico ou parâmetros; regras dependentes não foram executadas.</p>}
+          <AchadosAuditoria achados={achados} />
 
           <div className="panel overflow-auto">
             <div className="panel-h">Alterar Dados de Origem</div>
