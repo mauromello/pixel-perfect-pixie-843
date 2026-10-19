@@ -90,7 +90,6 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
       tec += mantidos.reduce((n,t) => n + perdasTrafo(t), 0);
       const gd = mantidos.reduce((n,t) => n + geracao(t), 0);
       const entradasExternas = ativos.filter(m => !dentro.has(m.origemId) && m.destinoId === f.id).reduce((n,m) => n + m.energiaMWh - m.reversaMWh, 0);
-      const saidas = ativos.filter(m => m.origemId === f.id && !f.trafos.some(t => t.id === m.destinoId)).reduce((n,m) => n + m.energiaMWh - m.reversaMWh, 0);
       const temExportacaoMedida = ativos.some(m => m.origemId === f.id && !f.trafos.some(t => t.id === m.destinoId) && !f.segmentos.some(g => g.id === m.destinoId));
       if (!temExportacaoMedida && f.exportacaoFronteira !== 0) adicionar(`residual-${f.id}`, f.cod, f.id, "exterior", f.exportacaoFronteira, "estimada");
       if (motor === "analitico") pt += tec;
@@ -121,6 +120,7 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
   entrada += entradasFronteira;
   const fronteiraInterna = fronteira.filter(e => e.tipo === "interno").reduce((n,e) => n + e.fluxo, 0);
   const liquida = entrada - fronteiraExterna;
+  if (motor === "parametrizado") pt = liquida * pctManual / 100;
   const total = liquida - fornecida;
   const estanqueidade = entrada > 0 ? Math.max(0, Math.min(100, 100 * (1 - Math.abs(fronteiraExterna) / entrada))) : 100;
   const estimadas = externo.filter(e => e.fonte === "estimada").length;
