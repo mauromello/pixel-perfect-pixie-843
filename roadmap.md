@@ -1,8 +1,8 @@
 # Analytical technical losses
-- [ ] Apply and test editable analytical factors without changing trunk current.
-- [ ] Add validated PERTEC PLUS CSV import with analytical fallback.
-- [ ] Update Methodology equations, controls and English translations.
-- [ ] Verify demo loss range and the live edit/import flow.
+- [x] Apply and test editable analytical factors without changing trunk current.
+- [x] Add validated PERTEC PLUS CSV import with analytical fallback.
+- [x] Update Methodology equations, controls and English translations.
+- [x] Verify demo loss range and the live edit/import flow.
 
 # Geo-electric sub-balances
 - [x] Add the approved boundary-meter prerequisite to the shared network model, with demo readings and editable connections.

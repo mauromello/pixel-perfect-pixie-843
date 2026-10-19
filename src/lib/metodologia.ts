@@ -59,8 +59,9 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
   selecionados.filter(m => !ativos.includes(m)).forEach(m => alertas.push(`Leitura inválida: ${m.nome}`));
   let entrada = 0, fornecida = 0, pt = 0;
   const calculo = (f: Alimentador) => motor === "importado" ? perdaTecnica({ ...f, motorPT: "importado" }) : perdaTecnicaAnalitica(f);
+  const pais = new Map(ses.flatMap(s => s.alimentadores.flatMap(f => f.trafos.map(t => [t.id, f] as const))));
   const perdasTrafo = (t: Alimentador["trafos"][number]) => {
-    const f = ses.flatMap(s => s.alimentadores).find(f => f.trafos.some(tr => tr.id === t.id));
+    const f = pais.get(t.id);
     if (!f) return perdaTecnicaTrafo(t);
     const a = perdaTecnicaAnalitica(f);
     const escala = motor === "importado" && a.total > 0 ? calculo(f).total / a.total : 1;

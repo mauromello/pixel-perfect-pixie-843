@@ -1,6 +1,12 @@
 // en-US dictionary keyed by the Portuguese text shown on screen.
 // "#" stands for any number inside the text (see traduzir in i18n.ts).
 export const EN_TELAS: Record<string, string> = {
+  "A — Analítico (PRODIST Módulo 7)": "A — Analytical (PRODIST Module 7)",
+  "B — Parametrizado (% informado)": "B — Parameterized (specified %)",
+  "C — Regulatório / IPTD (PRORET 2.6)": "C — Regulatory / IPTD (PRORET 2.6)",
+  "PT = Entrada líquida × % informado por nível": "TL = Net input × specified % by voltage level",
+  "PT e PNT = Entrada líquida × metas homologadas": "TL and NTL = Net input × approved targets",
+  "Regulatório": "Regulatory",
   "Fator de distribuição Fd": "Load distribution factor Fd", "Coeficiente a": "Coefficient a", "Fator de carga FC": "Load factor FC",
   "D — PT importada (PERTEC PLUS)": "D — Imported technical losses (PERTEC PLUS)",
   "PT = CSV por alimentador; sem linha: motor analítico": "TL = CSV per feeder; missing row: analytical engine",

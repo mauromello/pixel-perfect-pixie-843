@@ -102,8 +102,8 @@ function MetodologiaPage() {
           <div className="panel">
             <div className="panel-h">{t("Equações por nível de tensão")}</div>
             <div className="space-y-3 p-4 font-mono text-xs">
-              <p><b>Perda total:</b> L = E_entrada_líquida − E_fornecida</p>
-              <p><b>Entrada líquida:</b> E_disjuntor + E_GD_export − E_fronteira</p>
+              <p><b>{t("Perda total")}:</b> L = E_net_input − E_delivered</p>
+              <p><b>{t("Entrada líquida")}:</b> E_breaker + E_GD_export − E_boundary</p>
               <p><b>AT (SE):</b> L_AT = E_AT + G_local − S_aux − Σ E_disjuntor</p>
               <p><b>{t("MT (condutores)")}:</b> L_MT = 3 · R · I² · L · 730 · Fd · Fp / 10⁶ MWh</p>
               <p>Fp = a · FC + (1 − a) · FC² = {fmt(fatorPerdas(parametros), 4)}</p>
@@ -111,7 +111,7 @@ function MetodologiaPage() {
               <p><b>{t("BT (trafos)")}:</b> L_BT = (P0 + Pcu · FC²) · 730 / 1000 MWh</p>
               <p><b>PNT:</b> L_NT = L − L_técnica</p>
               <p><b>GD:</b> {t("exportação e importação lidas separadamente — nunca compensadas")}</p>
-              <p><b>Regulatório:</b> PT = E · %PT_PRORET; PNT = E · %PNT_PRORET</p>
+              <p><b>{t("Regulatório")}:</b> PT = E · %PT_PRORET; PNT = E · %PNT_PRORET</p>
               <p><b>PERTEC PLUS:</b> {t("PT = CSV por alimentador; sem linha: motor analítico")}</p>
               <p className="text-muted-foreground">{t("PT importada por nível e por área parcial: rateio proporcional às perdas analíticas.")}</p>
             </div>
