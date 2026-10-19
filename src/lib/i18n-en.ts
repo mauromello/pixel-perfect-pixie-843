@@ -284,7 +284,6 @@ export const EN_TELAS: Record<string, string> = {
   'Medições e Críticas': 'Measurements & Data Checks',
   'Motor de cálculo de perdas técnicas': 'Technical loss calculation engine',
   'Equações por nível de tensão': 'Equations by voltage level',
-  'Energia injetada': 'Injected energy',
   'Entrada líquida': 'Net input',
   'Camadas de medição': 'Measurement layers',
   'Gap regulatório por subestação': 'Regulatory gap by substation',
