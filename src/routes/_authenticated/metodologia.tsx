@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/AppShell";
 import { useRede } from "@/lib/network-store";
 import { SubBalancos } from "@/components/SubBalancos";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 import { CAMADAS, MOTORES, auditar, gapPorSE, saudeCamadas, type Motor } from "@/lib/metodologia";
 
 export const Route = createFileRoute("/_authenticated/metodologia")({
@@ -25,6 +26,7 @@ const fmt = (n: number, d = 0) => n.toLocaleString("pt-BR", { maximumFractionDig
 const sevCls = { Alta: "bg-destructive/15 text-destructive", Média: "bg-chart-4/20", Baixa: "bg-muted" } as const;
 
 function MetodologiaPage() {
+  const t = useT();
   const ses = useRede((s) => s.subestacoes);
   const [aba, setAba] = useState<(typeof ABAS)[number]>(ABAS[0]);
   const [motor, setMotor] = useState<Motor>("analitico");
@@ -39,7 +41,7 @@ function MetodologiaPage() {
     <div className="space-y-4">
       <PageHeader title="Metodologia e Cálculo" subtitle="Motores de perdas, sub-balanços geoelétricos, gap regulatório e crítica de medições (Anexo II itens 1, 2, 4, 8 e 10)" />
       <div className="flex flex-wrap gap-2">
-        {ABAS.map((a) => <Button key={a} size="sm" className="h-auto min-h-8 whitespace-normal text-left" variant={a === aba ? "default" : "outline"} onClick={() => setAba(a)}>{a}</Button>)}
+        {ABAS.map((a) => <Button key={a} size="sm" className="h-auto min-h-8 whitespace-normal text-left" variant={a === aba ? "default" : "outline"} onClick={() => setAba(a)}>{t(a)}</Button>)}
       </div>
 
       {aba === "Motores e Equações" && (
