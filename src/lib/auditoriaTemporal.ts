@@ -1,13 +1,14 @@
-import type { Subestacao } from "./calculationEngine";
+import type { Subestacao, Chave } from "./calculationEngine";
 import type { Achado } from "./metodologia";
 import { PARAMETROS_CRITICAS, mesesAnteriores, parametroCritica, variacaoHistorica, type LeituraMensal, type ParametroCritica } from "./historico";
 
-export type ContextoAuditoria = { serie: LeituraMensal[]; competencia: string; parametros: ParametroCritica[]; historicoDisponivel: boolean };
+export type ContextoAuditoria = { serie: LeituraMensal[]; competencia: string; parametros: ParametroCritica[]; historicoDisponivel: boolean; chaves?: Chave[] };
 export function auditarContexto(ses: Subestacao[], ctx: ContextoAuditoria): Achado[] {
   const out: Achado[] = [];
   const ps = ctx.parametros;
   const limite = (regra: string, parametro: string) => parametroCritica(ps, regra, parametro);
   const nomes = new Map<string, string>();
+  for (const c of ctx.chaves ?? []) nomes.set(c.id, c.cod);
   const trafos = ses.flatMap(s => s.alimentadores.flatMap(f => f.trafos));
   for (const s of ses) {
     nomes.set(s.id, s.nome);
@@ -16,7 +17,7 @@ export function auditarContexto(ses: Subestacao[], ctx: ContextoAuditoria): Acha
   }
   const push = (id: string, regra: string, descricao: string, medido: number | null, referencia: number | null, severidade: Achado["severidade"] = "Alta", variacao: number | null = null) => out.push({ elementoId: id, elemento: nomes.get(id) ?? id, regra, descricao, competencia: ctx.competencia, valorMedido: medido, valorReferencia: referencia, severidade, variacaoHistorica: variacao });
   if (ctx.historicoDisponivel) {
-    const ids = new Set([...nomes.keys(), ...ctx.serie.map(r => r.elemento_id)]);
+    const ids = new Set(ses.length ? nomes.keys() : ctx.serie.map(r => r.elemento_id));
     const porId = new Map<string, LeituraMensal[]>();
     for (const row of ctx.serie) { const rows = porId.get(row.elemento_id) ?? []; rows.push(row); porId.set(row.elemento_id, rows); }
     for (const id of ids) {

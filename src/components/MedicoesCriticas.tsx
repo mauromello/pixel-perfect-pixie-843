@@ -21,6 +21,7 @@ function Limite({ parametro, parametros, admin, salvar, pendente }: { parametro:
 export function MedicoesCriticas() {
   const t = useT(); const { sessao } = auth.useRouteContext(); const qc = useQueryClient();
   const ses = useRede(s => s.subestacoes);
+  const chaves = useRede(s => s.chaves);
   const [competencia, setCompetencia] = useState("2026-09-01");
   const ps = useQuery(parametrosCriticasQuery(sessao.id));
   const hist = useQuery(historicoQuery(sessao.id, competencia));
@@ -31,7 +32,7 @@ export function MedicoesCriticas() {
     const { error } = await supabase.from("criticas_parametros").update({ valor: p.valor }).eq("regra", p.regra).eq("parametro", p.parametro).select().single();
     if (error) throw error;
   }, onSuccess: async () => { setMsg("Alteração salva."); await qc.invalidateQueries({ queryKey: ["criticas_parametros"] }); }, onError: () => setMsg("Não foi possível salvar os parâmetros de críticas.") });
-  const achados = useMemo(() => auditar(ses, { serie: hist.data ?? [], competencia, parametros: ps.data ?? [], historicoDisponivel: hist.isSuccess }), [ses, hist.data, hist.isSuccess, competencia, ps.data]);
+  const achados = useMemo(() => auditar(ses, { serie: hist.data ?? [], competencia, parametros: ps.data ?? [], historicoDisponivel: hist.isSuccess, chaves }), [ses, chaves, hist.data, hist.isSuccess, competencia, ps.data]);
   const camadas = useMemo(() => saudeCamadas(ses), [ses]);
   return <section className="space-y-4" data-sem-traducao>
     <div className="flex flex-wrap items-center gap-3"><label className="text-sm">{t("Competência")}<select aria-label={t("Competência")} className="inp ml-2" value={competencia} onChange={e => setCompetencia(e.target.value)}>{mesesAnteriores("2026-09-01", 24).map(m => <option key={m} value={m}>{m.slice(0, 7)}</option>)}</select></label>

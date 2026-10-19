@@ -64,8 +64,8 @@ function BalancoPage() {
   const parametros = useQuery(parametrosCriticasQuery(sessao.id));
   const achados = useMemo(() => {
     const ids = new Set(idsNo(selecionado));
-    return auditar(ses, { serie: historico.data ?? [], competencia: "2026-09-01", parametros: parametros.data ?? [], historicoDisponivel: historico.isSuccess }).filter(a => selecionado.id === "root" || (a.elementoId && ids.has(a.elementoId)));
-  }, [ses, selecionado, historico.data, historico.isSuccess, parametros.data]);
+    return auditar(ses, { serie: historico.data ?? [], competencia: "2026-09-01", parametros: parametros.data ?? [], historicoDisponivel: historico.isSuccess, chaves }).filter(a => selecionado.id === "root" || (a.elementoId && ids.has(a.elementoId)));
+  }, [ses, chaves, selecionado, historico.data, historico.isSuccess, parametros.data]);
   const [ptManual, setPtManual] = useState("");
   const [msg, setMsg] = useState("");
   const [rel, setRel] = useState(false);

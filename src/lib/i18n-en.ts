@@ -2,6 +2,7 @@
 // "#" stands for any number inside the text (see traduzir in i18n.ts).
 export const EN_TELAS: Record<string, string> = {
   "Regra": "Rule", "Competência": "Reporting month", "Parâmetro": "Parameter", "Valor": "Value",
+  "8. Faixa de perdas": "8. Loss range",
   "Valor medido": "Measured value", "Valor de referência": "Reference value",
   "Parâmetros de críticas": "Data-check thresholds",
   "Dados de demonstração — série mensal fictícia e limiares ilustrativos, não homologados pela CEMIG.": "Demonstration data — fictitious monthly series and illustrative thresholds, not approved by CEMIG.",

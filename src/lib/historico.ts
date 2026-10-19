@@ -55,10 +55,10 @@ export function arvoreRede(ses: Subestacao[], chaves: Chave[] = []): NoRede {
   return { id: "root", nome: "Distribuidora MG", tipo: "Distribuidora", filhos: [...new Set(ses.map(s => s.regional))].map(regional => ({
     id: `regional:${regional}`, nome: regional, tipo: "Regional", filhos: [...new Set(ses.filter(s => s.regional === regional).map(s => s.municipio))].map(municipio => ({
       id: `municipio:${regional}:${municipio}`, nome: municipio, tipo: "Município", filhos: ses.filter(s => s.regional === regional && s.municipio === municipio).map(s => ({
-        id: s.id, nome: s.nome, tipo: "SE", filhos: s.alimentadores.map(f => ({ id: f.id, nome: f.cod, tipo: "Alimentador", filhos: [
+        id: s.id, nome: s.nome, tipo: "SE", filhos: [...(s.medidoresFronteira ?? []).map(m => ({ id: m.id, nome: m.nome, tipo: "Medidor" })), ...s.alimentadores.map(f => ({ id: f.id, nome: f.cod, tipo: "Alimentador", filhos: [
           ...chaves.filter(c => c.alimentadorId === f.id).map(c => ({ id: c.id, nome: c.cod, tipo: c.tipo === "religador" ? "Religador" : "Chave" })),
           ...f.trafos.map(t => ({ id: t.id, nome: t.nome, tipo: "Trafo", filhos: t.clientes.map(c => ({ id: c.id, nome: c.nome, tipo: "Instalação", filhos: c.medidor ? [{ id: c.medidor.id, nome: c.medidor.numero, tipo: "Medidor" }] : [] })) })),
-        ] })),
+        ] }))],
       })),
     })),
   })) };
