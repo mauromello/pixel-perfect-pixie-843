@@ -1,5 +1,5 @@
 // Metodologia e Cálculo (Anexo II itens 1, 2, 4, 8, 10). Pura e testada.
-import { balancoAlimentador, perdaTecnica, type Alimentador, type Subestacao } from "./calculationEngine";
+import { balancoAlimentador, perdaTecnica, HORAS_CICLO, FATOR_CARGA_TRAFO, type Chave, type Alimentador, type Subestacao } from "./calculationEngine";
 
 export type Motor = "analitico" | "parametrizado" | "regulatorio";
 export const MOTORES: { id: Motor; nome: string; desc: string }[] = [
@@ -16,23 +16,115 @@ export function perdaTecnicaMotor(f: Alimentador, motor: Motor, pctManual: numbe
   return (b.entradaLiquida * pct) / 100;
 }
 
-/** Sub-balanço geoelétrico: soma dos alimentadores selecionados; fluxos entre membros se compensam. */
-export function subBalanco(ses: Subestacao[], ids: string[], motor: Motor, pctManual: number) {
-  let entrada = 0, fornecida = 0, pt = 0, fronteiraExterna = 0, fronteiraInterna = 0;
+export type ElementosArea = {
+  alimentadores: string[];
+  /** Ausente: inclui todos os trafos dos alimentadores. Lista explícita: somente estes trafos. */
+  trafos?: string[];
+  medidoresFronteira: string[];
+  chavesCorte: string[];
+};
+export type ElementoFronteira = { id: string; nome: string; origemId: string; destinoId: string; fluxo: number; tipo: "interno" | "entrada" | "saida"; fonte: "medida" | "estimada" };
+
+/** Rede radial: corte na chave remove seu trecho e os seguintes, sem executar manobra. */
+export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor, pctManual: number, chaves: Chave[] = []) {
+  const dentro = new Set<string>();
+  const fronteira: ElementoFronteira[] = [];
+  const alertas: string[] = [];
+  const medidores = ses.flatMap(s => s.medidoresFronteira ?? []);
+  const ativos = medidores.filter(m => area.medidoresFronteira.includes(m.id));
+  let entrada = 0, fornecida = 0, pt = 0;
+  const perdasTrafo = (t: Alimentador["trafos"][number]) => (t.p0 + t.pcu * FATOR_CARGA_TRAFO ** 2) * HORAS_CICLO / 1000;
+  const consumo = (t: Alimentador["trafos"][number]) => t.clientes.reduce((n,c) => n + c.importacao, 0);
+  const geracao = (t: Alimentador["trafos"][number]) => t.clientes.reduce((n,c) => n + (c.tipo === "gd" ? c.exportacao : 0), 0);
+  const cuts = new Map<string, number>();
   for (const s of ses) for (const f of s.alimentadores) {
-    if (!ids.includes(f.id)) continue;
-    const b = balancoAlimentador(f);
-    entrada += f.entradaDisjuntor + b.geracaoEmbutida;
-    fornecida += b.fornecida.total;
-    pt += perdaTecnicaMotor(f, motor, pctManual, s.alvoPT);
-    // metade das exportações de fronteira é considerada para alimentadores vizinhos da mesma SE (interna)
-    const vizinhoDentro = s.alimentadores.some((o) => o.id !== f.id && ids.includes(o.id));
-    if (vizinhoDentro) fronteiraInterna += f.exportacaoFronteira; else fronteiraExterna += f.exportacaoFronteira;
+    const indices = chaves.filter(c => area.chavesCorte.includes(c.id) && c.alimentadorId === f.id && !c.alimentadorBId).map(c => f.segmentos.findIndex(g => g.id === c.segmentoId)).filter(i => i >= 0);
+    cuts.set(f.id, indices.length ? Math.min(...indices) : f.segmentos.length);
+    if (area.alimentadores.includes(f.id)) {
+      dentro.add(f.id);
+      f.segmentos.slice(0, cuts.get(f.id)).forEach(g => dentro.add(g.id));
+    }
+    for (const t of f.trafos) {
+      const selecionado = area.trafos === undefined ? area.alimentadores.includes(f.id) : area.trafos.includes(t.id);
+      const idx = f.segmentos.findIndex(g => g.id === t.segmentoId);
+      const cortado = area.alimentadores.includes(f.id) && idx >= (cuts.get(f.id) ?? f.segmentos.length) && idx >= 0;
+      if (selecionado && !cortado) dentro.add(t.id);
+    }
   }
+  const adicionar = (id: string, nome: string, origemId: string, destinoId: string, fluxo: number, fonte: "medida" | "estimada") => {
+    const a = dentro.has(origemId), b = dentro.has(destinoId);
+    if (!a && !b) return;
+    fronteira.push({ id, nome, origemId, destinoId, fluxo, fonte, tipo: a && b ? "interno" : a ? "saida" : "entrada" });
+  };
+  for (const s of ses) for (const f of s.alimentadores) {
+    const full = dentro.has(f.id);
+    const mantidos = f.trafos.filter(t => dentro.has(t.id));
+    if (full) {
+      entrada += f.entradaDisjuntor;
+      fornecida += f.usoInterno + f.iluminacaoPublica;
+      const totalL = f.segmentos.reduce((n,g) => n + g.comprimento, 0);
+      const keepL = f.segmentos.filter(g => dentro.has(g.id)).reduce((n,g) => n + g.comprimento, 0);
+      const proporcao = totalL > 0 ? keepL / totalL : 1;
+      let tec = perdaTecnica(f).condutor * proporcao;
+      const corte = cuts.get(f.id) ?? f.segmentos.length;
+      const removidos = f.trafos.filter(t => !dentro.has(t.id));
+      for (const t of removidos) {
+        const cobertura = ativos.some(m => m.origemId === t.id || m.destinoId === t.id);
+        if (!cobertura) adicionar(`trafo-${t.id}`, t.nome, f.id, t.id, consumo(t) + perdasTrafo(t) - geracao(t), "estimada");
+      }
+      if (corte < f.segmentos.length) {
+        const c = chaves.find(c => area.chavesCorte.includes(c.id) && c.alimentadorId === f.id && c.segmentoId === f.segmentos[corte]?.id);
+        const sg = f.segmentos[corte];
+        const perdaRemovida = perdaTecnica(f).condutor * (1 - proporcao);
+        if (sg && c && !ativos.some(m => m.origemId === sg.id || m.destinoId === sg.id)) adicionar(c.id, c.cod, f.id, sg.id, perdaRemovida, "estimada");
+      }
+      tec += mantidos.reduce((n,t) => n + perdasTrafo(t), 0);
+      const gd = mantidos.reduce((n,t) => n + geracao(t), 0);
+      const entradasExternas = ativos.filter(m => !dentro.has(m.origemId) && m.destinoId === f.id).reduce((n,m) => n + m.energiaMWh - m.reversaMWh, 0);
+      const saidas = ativos.filter(m => m.origemId === f.id && !f.trafos.some(t => t.id === m.destinoId)).reduce((n,m) => n + m.energiaMWh - m.reversaMWh, 0);
+      const residual = f.exportacaoFronteira - saidas;
+      if (Math.abs(residual) > 1e-9) adicionar(`residual-${f.id}`, f.cod, f.id, "exterior", residual, "estimada");
+      if (motor === "analitico") pt += tec;
+      else {
+        const saidaArea = removidos.reduce((n,t) => n + consumo(t) + perdasTrafo(t) - geracao(t), 0) + perdaTecnica(f).condutor * (1 - proporcao);
+        pt += (f.entradaDisjuntor + gd + entradasExternas - f.exportacaoFronteira - saidaArea) * (motor === "parametrizado" ? pctManual : s.alvoPT) / 100;
+      }
+    }
+    for (const t of mantidos) {
+      entrada += geracao(t);
+      fornecida += consumo(t);
+      if (!full) {
+        const medido = ativos.some(m => m.destinoId === t.id || m.origemId === t.id);
+        if (!medido) adicionar(`entrada-${t.id}`, t.nome, f.id, t.id, consumo(t) + perdasTrafo(t) - geracao(t), "estimada");
+        pt += motor === "analitico" ? perdasTrafo(t) : (consumo(t) + perdasTrafo(t)) * (motor === "parametrizado" ? pctManual : s.alvoPT) / 100;
+      }
+    }
+  }
+  for (const m of ativos) {
+    if (!Number.isFinite(m.energiaMWh) || !Number.isFinite(m.reversaMWh) || m.energiaMWh < 0 || m.reversaMWh < 0) { alertas.push(`Leitura inválida: ${m.nome}`); continue; }
+    adicionar(m.id, m.nome, m.origemId, m.destinoId, m.energiaMWh - m.reversaMWh, m.fonte);
+  }
+  const externo = fronteira.filter(e => e.tipo !== "interno");
+  const entradasFronteira = externo.filter(e => e.tipo === "entrada").reduce((n,e) => n + e.fluxo, 0);
+  const fronteiraExterna = externo.filter(e => e.tipo === "saida").reduce((n,e) => n + e.fluxo, 0);
+  entrada += entradasFronteira;
+  const fronteiraInterna = fronteira.filter(e => e.tipo === "interno").reduce((n,e) => n + e.fluxo, 0);
   const liquida = entrada - fronteiraExterna;
   const total = liquida - fornecida;
-  const estanqueidade = entrada > 0 ? 100 * (1 - fronteiraExterna / entrada) : 100;
-  return { entrada, fronteiraExterna, fronteiraInterna, liquida, fornecida, total, pt, pnt: total - pt, pct: liquida > 0 ? (100 * total) / liquida : 0, estanqueidade };
+  const estanqueidade = entrada > 0 ? Math.max(0, Math.min(100, 100 * (1 - Math.abs(fronteiraExterna) / entrada))) : 100;
+  const estimadas = externo.filter(e => e.fonte === "estimada").length;
+  if (estimadas) alertas.push("Fronteira com fluxos estimados; balanço não homologado.");
+  const ids = new Set(ses.flatMap(s => s.alimentadores.flatMap(f => [f.id, ...f.trafos.map(t => t.id)])));
+  if ([...area.alimentadores, ...(area.trafos ?? [])].some(id => !ids.has(id)) || area.medidoresFronteira.some(id => !medidores.some(m => m.id === id)) || area.chavesCorte.some(id => !chaves.some(c => c.id === id))) alertas.push("A área contém elementos ausentes no modelo atual.");
+  return { entrada, fronteiraExterna, fronteiraInterna, liquida, fornecida, total, pt, pnt: total - pt, pct: liquida > 0 ? 100 * total / liquida : 0, estanqueidade, fronteira, alertas };
+}
+
+export function validarElementosArea(value: unknown): ElementosArea | null {
+  if (!value || typeof value !== "object") return null;
+  const v = value as Record<string, unknown>;
+  const lista = (x: unknown): x is string[] => Array.isArray(x) && x.every(i => typeof i === "string");
+  if (!lista(v.alimentadores) || !lista(v.medidoresFronteira) || !lista(v.chavesCorte) || (v.trafos !== undefined && !lista(v.trafos))) return null;
+  return { alimentadores: v.alimentadores, trafos: v.trafos as string[] | undefined, medidoresFronteira: v.medidoresFronteira, chavesCorte: v.chavesCorte };
 }
 
 /** Gap regulatório e exposição tarifária (R$) — perda acima da meta não é repassada (Parcela A). */
