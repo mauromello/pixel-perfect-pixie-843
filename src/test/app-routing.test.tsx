@@ -1,6 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter, rootRouteId } from "@tanstack/react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Routing never consumes map styles; keep Vite's external package CSS out of this unit test.
+vi.mock("leaflet/dist/leaflet.css?url", () => ({ default: "" }));
 
 import { routeTree } from "@/routeTree.gen";
 

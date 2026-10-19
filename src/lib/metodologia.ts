@@ -132,8 +132,8 @@ export function validarElementosArea(value: unknown): ElementosArea | null {
   if (!value || typeof value !== "object") return null;
   const v = value as Record<string, unknown>;
   const lista = (x: unknown): x is string[] => Array.isArray(x) && x.every(i => typeof i === "string");
-  if (!lista(v.alimentadores) || !lista(v.medidoresFronteira) || !lista(v.chavesCorte) || (v.trafos !== undefined && !lista(v.trafos))) return null;
-  return { alimentadores: v.alimentadores, trafos: v.trafos as string[] | undefined, medidoresFronteira: v.medidoresFronteira, chavesCorte: v.chavesCorte };
+  if (!lista(v['alimentadores']) || !lista(v['medidoresFronteira']) || !lista(v['chavesCorte']) || (v['trafos'] !== undefined && !lista(v['trafos']))) return null;
+  return { alimentadores: v['alimentadores'], ...(lista(v['trafos']) ? { trafos: v['trafos'] } : {}), medidoresFronteira: v['medidoresFronteira'], chavesCorte: v['chavesCorte'] };
 }
 
 /** Gap regulatório e exposição tarifária (R$) — perda acima da meta não é repassada (Parcela A). */
