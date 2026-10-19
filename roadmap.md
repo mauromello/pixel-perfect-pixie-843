@@ -1,3 +1,8 @@
+# CEMIG business rules
+- [ ] Resolve market and CCEE/frontier prerequisites and rule interpretation against the supplied ET-07 document.
+- [ ] Implement pure monthly segment rules and versioned CCEE allocations with tests.
+- [ ] Add editable Regras CEMIG tab and connect adjusted delivered energy to competence balances.
+
 # Initial-screen energy balance
 - [x] Connect live hierarchy, selected-node KPIs and methodology/manual PT to the calculation engine.
 - [x] Read six-month measured history without inventing missing months; remove unused mock balance/tree.
