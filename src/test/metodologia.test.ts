@@ -54,6 +54,7 @@ describe("sub-balanços geoelétricos", () => {
     expect(one.fronteiraExterna).toBe(50); expect(one.fronteiraInterna).toBe(0);
     const both = subBalanco(ses, area({ alimentadores: ["a", "b"], medidoresFronteira: ["m"] }), "analitico", 7);
     expect(both.fronteiraExterna).toBe(50); expect(both.fronteiraInterna).toBe(50);
+    expect(both.entrada).toBe(1950);
   });
   it("medidor no corte substitui estimativa sem duplicar consumo de trafos", () => {
     const ses = rede(); const se = ses[0]; if (!se) throw new Error("fixture");

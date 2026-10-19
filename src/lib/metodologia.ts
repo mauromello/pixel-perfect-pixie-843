@@ -119,6 +119,10 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
   const fronteiraExterna = externo.filter(e => e.tipo === "saida").reduce((n,e) => n + e.fluxo, 0);
   entrada += entradasFronteira;
   const fronteiraInterna = fronteira.filter(e => e.tipo === "interno").reduce((n,e) => n + e.fluxo, 0);
+  // Feeder breaker inputs already contain energy received from other selected feeders.
+  // Remove that counted input when its measured outgoing flow is cancelled internally.
+  const alimentadoresDentro = new Set(area.alimentadores);
+  entrada -= fronteira.filter(e => e.tipo === "interno" && alimentadoresDentro.has(e.destinoId) && e.origemId !== e.destinoId).reduce((n,e) => n + e.fluxo, 0);
   const liquida = entrada - fronteiraExterna;
   if (motor === "parametrizado") pt = liquida * pctManual / 100;
   const total = liquida - fornecida;
