@@ -59,6 +59,24 @@ export type Database = {
         }
         Relationships: []
       }
+      criticas_parametros: {
+        Row: {
+          parametro: string
+          regra: string
+          valor: number
+        }
+        Insert: {
+          parametro: string
+          regra: string
+          valor: number
+        }
+        Update: {
+          parametro?: string
+          regra?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       dicionario_dados: {
         Row: {
           chave: boolean
@@ -131,6 +149,36 @@ export type Database = {
           nome?: string
           ultimo_acesso?: string | null
           unidade?: string
+        }
+        Relationships: []
+      }
+      serie_mensal: {
+        Row: {
+          carga_kva: number | null
+          competencia: string
+          consumo_mwh: number | null
+          demonstracao: boolean
+          elemento_id: string
+          energia_injetada: number | null
+          leitura_completa: boolean
+        }
+        Insert: {
+          carga_kva?: number | null
+          competencia: string
+          consumo_mwh?: number | null
+          demonstracao?: boolean
+          elemento_id: string
+          energia_injetada?: number | null
+          leitura_completa?: boolean
+        }
+        Update: {
+          carga_kva?: number | null
+          competencia?: string
+          consumo_mwh?: number | null
+          demonstracao?: boolean
+          elemento_id?: string
+          energia_injetada?: number | null
+          leitura_completa?: boolean
         }
         Relationships: []
       }
