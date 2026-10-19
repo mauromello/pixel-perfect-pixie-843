@@ -15,6 +15,11 @@ describe("ET-07 4.1.1.2", () => {
   });
   it("B projects class mean times previous consumers plus 12-month absolute growth", () => {
     expect(projetarGrupoB(100, 10, 12, 2)).toBe(140); expect(projetarGrupoB(100, 0, 12, 2)).toBeNull();
+    expect(projetarGrupoB(100, 1.5, 12, 2)).toBeNull();
+  });
+  it("duplicate voltage classes cannot double count delivered market energy", () => {
+    const e = entrada(); const a = e.grupoA[0]; if (!a) throw new Error("Missing class");
+    e.grupoA.push({ ...a }); expect(aplicarRegrasCemig(e).fornecida).toBeNull();
   });
   it("IP uses installed kW times actual month lighting hours, converted to MWh", () => {
     expect(projetarIP(10, 360, "2026-09")).toBe(3.6); expect(projetarIP(10, 721, "2026-09")).toBeNull();
