@@ -39,7 +39,7 @@ function MetodologiaPage() {
     <div className="space-y-4">
       <PageHeader title="Metodologia e Cálculo" subtitle="Motores de perdas, sub-balanços geoelétricos, gap regulatório e crítica de medições (Anexo II itens 1, 2, 4, 8 e 10)" />
       <div className="flex flex-wrap gap-2">
-        {ABAS.map((a) => <Button key={a} size="sm" variant={a === aba ? "default" : "outline"} onClick={() => setAba(a)}>{a}</Button>)}
+        {ABAS.map((a) => <Button key={a} size="sm" className="h-auto min-h-8 whitespace-normal text-left" variant={a === aba ? "default" : "outline"} onClick={() => setAba(a)}>{a}</Button>)}
       </div>
 
       {aba === "Motores e Equações" && (

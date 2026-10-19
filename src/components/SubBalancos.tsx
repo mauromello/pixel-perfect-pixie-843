@@ -89,7 +89,7 @@ export function SubBalancos({ motor, pct }: { motor: Motor; pct: number }) {
     <div className="grid gap-4 xl:grid-cols-[minmax(300px,1fr)_2fr]">
       <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap gap-1" role="tablist" aria-label={t("Elementos da área")}>
-          {grupos.map(g => <Button key={g} size="sm" role="tab" aria-selected={grupo === g} variant={grupo === g ? "default" : "outline"} onClick={() => { setGrupo(g); setFiltro(""); setEditar(null); }}>{t(nomes[g])}</Button>)}
+          {grupos.map(g => <Button key={g} size="sm" className="h-auto min-h-8 whitespace-normal text-left" role="tab" aria-selected={grupo === g} variant={grupo === g ? "default" : "outline"} onClick={() => { setGrupo(g); setFiltro(""); setEditar(null); }}>{t(nomes[g])}</Button>)}
         </div>
         <input className="inp w-full" aria-label={t("Filtrar elementos")} placeholder={t("Filtrar elementos")} value={filtro} onChange={e => setFiltro(e.target.value)} />
         <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{(area[grupo] ?? []).length} {t("Selecionados")}</span><Button size="sm" variant="ghost" onClick={() => setArea({ alimentadores: [], trafos: [], medidoresFronteira: [], chavesCorte: [] })}>{t("Limpar")}</Button></div>

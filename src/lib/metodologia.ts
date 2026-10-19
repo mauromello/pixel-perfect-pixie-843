@@ -31,7 +31,9 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
   const fronteira: ElementoFronteira[] = [];
   const alertas: string[] = [];
   const medidores = ses.flatMap(s => s.medidoresFronteira ?? []);
-  const ativos = medidores.filter(m => area.medidoresFronteira.includes(m.id));
+  const selecionados = medidores.filter(m => area.medidoresFronteira.includes(m.id));
+  const ativos = selecionados.filter(m => Number.isFinite(m.energiaMWh) && Number.isFinite(m.reversaMWh) && m.energiaMWh >= 0 && m.reversaMWh >= 0 && m.origemId !== m.destinoId);
+  selecionados.filter(m => !ativos.includes(m)).forEach(m => alertas.push(`Leitura inválida: ${m.nome}`));
   let entrada = 0, fornecida = 0, pt = 0;
   const perdasTrafo = (t: Alimentador["trafos"][number]) => (t.p0 + t.pcu * FATOR_CARGA_TRAFO ** 2) * HORAS_CICLO / 1000;
   const consumo = (t: Alimentador["trafos"][number]) => t.clientes.reduce((n,c) => n + c.importacao, 0);
@@ -89,8 +91,8 @@ export function subBalanco(ses: Subestacao[], area: ElementosArea, motor: Motor,
       const gd = mantidos.reduce((n,t) => n + geracao(t), 0);
       const entradasExternas = ativos.filter(m => !dentro.has(m.origemId) && m.destinoId === f.id).reduce((n,m) => n + m.energiaMWh - m.reversaMWh, 0);
       const saidas = ativos.filter(m => m.origemId === f.id && !f.trafos.some(t => t.id === m.destinoId)).reduce((n,m) => n + m.energiaMWh - m.reversaMWh, 0);
-      const residual = f.exportacaoFronteira - saidas;
-      if (Math.abs(residual) > 1e-9) adicionar(`residual-${f.id}`, f.cod, f.id, "exterior", residual, "estimada");
+      const temExportacaoMedida = ativos.some(m => m.origemId === f.id && !f.trafos.some(t => t.id === m.destinoId) && !f.segmentos.some(g => g.id === m.destinoId));
+      if (!temExportacaoMedida && f.exportacaoFronteira !== 0) adicionar(`residual-${f.id}`, f.cod, f.id, "exterior", f.exportacaoFronteira, "estimada");
       if (motor === "analitico") pt += tec;
       else {
         const saidaArea = removidos.reduce((n,t) => n + consumo(t) + perdasTrafo(t) - geracao(t), 0) + perdaTecnica(f).condutor * (1 - proporcao);

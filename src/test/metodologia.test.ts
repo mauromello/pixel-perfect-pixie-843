@@ -70,4 +70,10 @@ describe("sub-balanços geoelétricos", () => {
     expect(validarElementosArea({ alimentadores: [123], trafos: [], medidoresFronteira: [], chavesCorte: [] })).toBeNull();
     expect(validarElementosArea(area())).toEqual(area());
   });
+  it("leitura externa prevalece sobre exportação agregada antiga", () => {
+    const ses = rede(); const se = ses[0]; if (!se) throw new Error("fixture");
+    se.medidoresFronteira = [{ id: "m", nome: "M", origemId: "a", destinoId: "exterior", energiaMWh: 123.45, reversaMWh: 10, fonte: "medida" }];
+    const sb = subBalanco(ses, area({ medidoresFronteira: ["m"] }), "analitico", 7);
+    expect(sb.fronteiraExterna).toBeCloseTo(113.45);
+  });
 });

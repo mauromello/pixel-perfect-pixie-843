@@ -89,6 +89,7 @@ const SES: DefSE[] = [
 
 function demo() {
   semente = 42;
+  seq = 1000;
   let k = 0;
   const subestacoes: Subestacao[] = SES.map(([nome, regional, municipio, lat, lng, nAl, sigla], i) => {
     const o: Coord = [lat, lng];
