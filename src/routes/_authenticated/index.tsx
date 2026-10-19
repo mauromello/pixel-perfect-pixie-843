@@ -7,9 +7,12 @@ import { PageHeader } from "@/components/AppShell";
 import { PainelBalancoFisico } from "@/components/BalancoFisico";
 import { PerdasNiveis } from "@/components/PerdasNiveis";
 import { RelatorioBalanco } from "@/components/RelatorioBalanco";
-import { balanco, fontesBalanco } from "@/lib/mock-data";
+import { fontesBalanco } from "@/lib/mock-data";
+import { balancoNo, serieBalancoNo } from "@/lib/calculationEngine";
+import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 import { useRede } from "@/lib/network-store";
-import { arvoreRede, encontrarNo, idsNo, type NoRede as Node } from "@/lib/historico";
+import { arvoreRede, encontrarNo, idsNo, mesesAnteriores, type NoRede as Node } from "@/lib/historico";
 import { auditar } from "@/lib/metodologia";
 import { historicoQuery, parametrosCriticasQuery } from "@/lib/auditoriaDados";
 import { AchadosAuditoria } from "@/components/AchadosAuditoria";
@@ -28,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/")({
   component: BalancoPage,
 });
 
-const fmt = (n: number) => n.toLocaleString("pt-BR");
+const fmt = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 
 function Tree({ node, sel, onSel, depth = 0 }: { node: Node; sel: string; onSel: (n: Node) => void; depth?: number }) {
   const [open, setOpen] = useState(depth < 2);
@@ -40,9 +43,9 @@ function Tree({ node, sel, onSel, depth = 0 }: { node: Node; sel: string; onSel:
         style={{ paddingLeft: depth * 12 + 4 }}
         onClick={() => onSel(node)}
       >
-        <button className="w-4" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
+        <Button variant="ghost" className="h-5 w-5 shrink-0 p-0" aria-label={`${open ? "Recolher" : "Expandir"} ${node.nome}`} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
           {has ? open ? <ChevronDown size={14} /> : <ChevronRight size={14} /> : null}
-        </button>
+        </Button>
         <span className="truncate">{node.nome}</span>
         <span className="ml-auto text-[10px] uppercase text-muted-foreground">{node.tipo}</span>
       </div>
@@ -54,9 +57,11 @@ function Tree({ node, sel, onSel, depth = 0 }: { node: Node; sel: string; onSel:
 const auth = getRouteApi("/_authenticated");
 
 function BalancoPage() {
+  const t = useT();
   const { sessao } = auth.useRouteContext();
   const ses = useRede(s => s.subestacoes);
   const chaves = useRede(s => s.chaves);
+  const metodologia = useRede(s => s.metodologia);
   const arvore = useMemo(() => arvoreRede(ses, chaves), [ses, chaves]);
   const [sel, setSel] = useState<Node>(arvore);
   const selecionado = encontrarNo(arvore, sel.id) ?? arvore;
@@ -70,17 +75,19 @@ function BalancoPage() {
   const [msg, setMsg] = useState("");
   const [rel, setRel] = useState(false);
   const [linhas, setLinhas] = useState(fontesBalanco);
-  const b = balanco(sel.id);
-  const ptPct = ptManual ? Number(ptManual) : b.ptPct;
-  const pt = Math.round((b.injetada * ptPct) / 100);
-  const pnt = b.injetada - b.faturada - pt;
+  const manual = ptManual.trim() === "" ? undefined : Number(ptManual);
+  const manualValida = manual === undefined || (Number.isFinite(manual) && manual >= 0 && manual <= 100);
+  const b = useMemo(() => balancoNo(ses, idsNo(selecionado), metodologia, manualValida ? manual : undefined), [ses, selecionado, metodologia, manual, manualValida]);
+  const grafico = useMemo(() => serieBalancoNo(b, historico.data ?? [], mesesAnteriores("2026-09-01", 6).reverse(), metodologia, manualValida ? manual : undefined), [b, historico.data, metodologia, manual, manualValida]);
+  const ptPct = b.injetada ? b.pt / b.injetada * 100 : 0;
+  const pntPct = b.injetada ? b.pnt / b.injetada * 100 : 0;
 
   return (
     <div>
-      <PageHeader title="Cálculo e Gestão do Balanço Energético" subtitle="Controle de medições: Regional → Município → SE → Alimentador → Religador → Trafo → Medidor → Instalação">
-        <button className="btn-primary" onClick={() => setRel(true)}>
+      <PageHeader title="Cálculo e Gestão do Balanço Energético" subtitle="Distribuidora → Regional → Município → SE → Alimentador → Religador → Trafo → Instalação">
+        <Button onClick={() => setRel(true)}>
           <FileText size={14} /> Gerar Relatório de Resultados
-        </button>
+        </Button>
       </PageHeader>
       {rel && <RelatorioBalanco onClose={() => setRel(false)} />}
       {msg && <div className="mx-6 mt-4 rounded border border-success/40 bg-success/10 px-3 py-2 text-sm">{msg}</div>}
@@ -90,12 +97,12 @@ function BalancoPage() {
           <div className="p-2"><Tree node={arvore} sel={sel.id} onSel={setSel} /></div>
         </div>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4" data-testid="balance-kpis">
             {[
               ["Energia Injetada", fmt(b.injetada) + " MWh"],
               ["Energia Faturada", fmt(b.faturada) + " MWh"],
-              [`Perdas Técnicas (${ptPct.toFixed(1)}%)`, fmt(pt) + " MWh"],
-              [`Perdas Não Técnicas (${((pnt / b.injetada) * 100).toFixed(1)}%)`, fmt(pnt) + " MWh"],
+              [`${t("Perdas Técnicas")} (${ptPct.toFixed(1)}%)`, fmt(b.pt) + " MWh"],
+              [`${t("Perdas Não Técnicas")} (${pntPct.toFixed(1)}%)`, fmt(b.pnt) + " MWh"],
             ].map(([l, v]) => (
               <div key={l} className="panel p-4">
                 <div className="text-xs text-muted-foreground">{l}</div>
@@ -103,12 +110,20 @@ function BalancoPage() {
               </div>
             ))}
           </div>
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <label className="flex items-center gap-2">{t("PT manual (%)")}<input aria-label={t("PT manual (%)")} className="inp w-28" type="number" min="0" max="100" step="0.1" placeholder={t("Automática")} value={ptManual} onChange={e => setPtManual(e.target.value)} /></label>
+            {ptManual && <Button variant="ghost" size="sm" onClick={() => setPtManual("")}>{t("Restaurar PT automática")}</Button>}
+            {!manualValida && <span role="alert" className="text-destructive">{t("Informe uma PT entre 0% e 100%.")}</span>}
+            <span className="text-xs text-muted-foreground">{t("Perdas AT da SE (separadas dos KPIs)")}: {fmt(b.perdaAT)} MWh</span>
+          </div>
           <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="panel">
-              <div className="panel-h">Balanço {sel.id === "root" ? "Global" : "Individualizado"} — {sel.nome}<span className="text-xs font-normal text-muted-foreground">{sel.tipo}</span></div>
+              <div className="panel-h">Balanço {selecionado.id === "root" ? "Global" : "Individualizado"} — {selecionado.nome}<span className="text-xs font-normal text-muted-foreground">{selecionado.tipo}</span></div>
+              {!grafico.completa && <p role="status" className="px-3 pt-3 text-xs text-muted-foreground">{t("Histórico de seis meses indisponível ou incompleto para este nó; exibindo somente o ciclo atual.")}</p>}
+              {selecionado.tipo === "Trafo" || selecionado.tipo === "Instalação" || selecionado.tipo === "Religador" ? <p className="px-3 pt-3 text-xs text-muted-foreground">{t("Ciclo atual a jusante: entrada estimada por consumo e PT alocada; sem medição independente de PNT.")}</p> : null}
               <div className="h-64 p-3">
                 <ResponsiveContainer>
-                  <BarChart data={b.serie}>
+                  <BarChart data={grafico.serie}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="mes" fontSize={12} />
                     <YAxis fontSize={12} />

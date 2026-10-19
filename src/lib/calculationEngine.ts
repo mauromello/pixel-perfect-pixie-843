@@ -186,6 +186,24 @@ export function balancoNo(ses: Subestacao[], ids: string[], metodologia: Metodol
   return resultado;
 }
 
+/** Historical energy comes only from complete persisted readings at the chosen accounting level. */
+export function serieBalancoNo(b: ResultadoNo, leituras: { elemento_id: string; competencia: string; energia_injetada: number | null; consumo_mwh: number | null; leitura_completa: boolean }[], meses: string[], metodologia: Metodologia, ptManual?: number) {
+  const indice = new Map(leituras.map(r => [`${r.elemento_id}:${r.competencia}`, r]));
+  const serie = meses.flatMap(mes => {
+    if (!b.fontes.length) return [];
+    let injetada = 0, faturada = 0, perdasReg = 0;
+    for (const fonte of b.fontes) {
+      const r = indice.get(`${fonte.id}:${mes}`);
+      if (!r?.leitura_completa || r.energia_injetada == null || r.consumo_mwh == null || !Number.isFinite(r.energia_injetada) || !Number.isFinite(r.consumo_mwh)) return [];
+      injetada += r.energia_injetada; faturada += r.consumo_mwh;
+      perdasReg += r.energia_injetada * (fonte.alvoPT + fonte.alvoPNT) / 100;
+    }
+    return [{ mes: mes.slice(0, 7), injetada, perdas: metodologia === "regulatorio" && ptManual === undefined ? perdasReg : injetada - faturada }];
+  });
+  const completa = serie.length === meses.length && meses.length === 6;
+  return { completa, serie: completa ? serie : [{ mes: (meses.at(-1) ?? "").slice(0, 7), injetada: b.injetada, perdas: b.pt + b.pnt }] };
+}
+
 // ================= Topologia CIM (IEC 61970 / CIM17) =================
 export type Coord = [number, number]; // [lat, lng]
 /** ACLineSegment — trecho de média tensão com traçado geográfico */

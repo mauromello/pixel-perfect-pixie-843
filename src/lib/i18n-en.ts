@@ -1,6 +1,14 @@
 // en-US dictionary keyed by the Portuguese text shown on screen.
 // "#" stands for any number inside the text (see traduzir in i18n.ts).
 export const EN_TELAS: Record<string, string> = {
+  "PT manual (%)": "Manual technical loss (%)",
+  "Automática": "Automatic",
+  "Restaurar PT automática": "Restore automatic technical loss",
+  "Informe uma PT entre 0% e 100%.": "Enter a technical loss between 0% and 100%.",
+  "Perdas AT da SE (separadas dos KPIs)": "Substation HV losses (separate from KPIs)",
+  "Histórico de seis meses indisponível ou incompleto para este nó; exibindo somente o ciclo atual.": "Six-month history unavailable or incomplete for this node; showing the current cycle only.",
+  "Ciclo atual a jusante: entrada estimada por consumo e PT alocada; sem medição independente de PNT.": "Current downstream cycle: input estimated from consumption and allocated technical loss; no independent non-technical loss measurement.",
+  "Distribuidora → Regional → Município → SE → Alimentador → Religador → Trafo → Instalação": "Distributor → Region → City → Substation → Feeder → Recloser → Transformer → Installation",
   "Regra": "Rule", "Competência": "Reporting month", "Parâmetro": "Parameter", "Valor": "Value",
   "8. Faixa de perdas": "8. Loss range",
   "Valor medido": "Measured value", "Valor de referência": "Reference value",
