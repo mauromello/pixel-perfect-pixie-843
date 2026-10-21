@@ -20,6 +20,7 @@ import { Route as AuthenticatedMapasRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedMetodologiaRouteImport } from './routes/_authenticated/metodologia'
 import { Route as AuthenticatedProjecaoRouteImport } from './routes/_authenticated/projecao'
 import { Route as AuthenticatedRedeRouteImport } from './routes/_authenticated/rede'
+import { Route as ApiCopilotRouteImport } from './routes/api/copilot'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -76,6 +77,11 @@ const AuthenticatedRedeRoute = AuthenticatedRedeRouteImport.update({
   path: '/rede',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiCopilotRoute = ApiCopilotRouteImport.update({
+  id: '/api/copilot',
+  path: '/api/copilot',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/metodologia': typeof AuthenticatedMetodologiaRoute
   '/projecao': typeof AuthenticatedProjecaoRoute
   '/rede': typeof AuthenticatedRedeRoute
+  '/api/copilot': typeof ApiCopilotRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/metodologia': typeof AuthenticatedMetodologiaRoute
   '/projecao': typeof AuthenticatedProjecaoRoute
   '/rede': typeof AuthenticatedRedeRoute
+  '/api/copilot': typeof ApiCopilotRoute
   '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/metodologia': typeof AuthenticatedMetodologiaRoute
   '/_authenticated/projecao': typeof AuthenticatedProjecaoRoute
   '/_authenticated/rede': typeof AuthenticatedRedeRoute
+  '/api/copilot': typeof ApiCopilotRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/metodologia'
     | '/projecao'
     | '/rede'
+    | '/api/copilot'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/metodologia'
     | '/projecao'
     | '/rede'
+    | '/api/copilot'
     | '/'
   id:
     | '__root__'
@@ -152,12 +163,14 @@ export interface FileRouteTypes {
     | '/_authenticated/metodologia'
     | '/_authenticated/projecao'
     | '/_authenticated/rede'
+    | '/api/copilot'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiCopilotRoute: typeof ApiCopilotRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRedeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/copilot': {
+      id: '/api/copilot'
+      path: '/api/copilot'
+      fullPath: '/api/copilot'
+      preLoaderRoute: typeof ApiCopilotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,6 +292,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiCopilotRoute: ApiCopilotRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

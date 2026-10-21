@@ -4,6 +4,7 @@ import { Activity, ArrowRightLeft, Calculator, BrainCircuit, GraduationCap, LogO
 import { supabase } from "@/integrations/supabase/client";
 import { nomePerfil, podeAcessar, type Area } from "@/lib/permissoes";
 import { IDIOMAS, useIdioma, useT } from "@/lib/i18n";
+import { CopilotDrawer } from "@/components/CopilotDrawer";
 
 const itens = [
   { to: "/", label: "Balanço Energético", icon: Scale, area: "balanco" },
@@ -77,6 +78,7 @@ export function AppShell() {
       <main className="min-w-0 flex-1">
         <Outlet />
       </main>
+      <CopilotDrawer />
     </div>
   );
 }
