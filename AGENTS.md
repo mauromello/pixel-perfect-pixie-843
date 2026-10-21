@@ -27,3 +27,4 @@
 - Geo-electric area calculations live in the pure, tested `src/lib/metodologia.ts`; boundary meters belong to the shared substation model, with directional readings and stable endpoint IDs, so area boundaries follow the same network after switching.
 - Per-element dated monthly readings are stored in `serie_mensal`; `auditar()` delegates temporal and installation checks to pure `auditoriaTemporal.ts`, with shared database thresholds and real-ID hierarchy in `historico.ts`. Missing historical data is never substituted with generated readings on page load.
 - Saved geo-electric areas use the browser's generated database client and database-enforced role policies; evaluator sessions cannot persist areas because they are not authenticated database users.
+- AI copilot runs in `/api/copilot` (server-held key, streamed text) with prompt, context snapshot and action parsing in pure `src/lib/copilot.ts`, so actions are whitelisted to app routes.

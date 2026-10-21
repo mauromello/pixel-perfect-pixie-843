@@ -33,3 +33,4 @@
 - [x] Create versioned saved-area storage with role-based policies.
 - [x] Update only the Methodology sub-balance tab, including Portuguese/English copy.
 - [x] Verify calculations and the selection/save/open flows using an authenticated administrator.
+- Copilot Técnico: drawer global com contexto da rede e ações rápidas (/api/copilot) — concluído
